@@ -12,15 +12,20 @@
 // gradient Constructor initialize m_prev with the children of the previous
 // Value and also the operator they had if they are not given uses default values
 template <typename T>
-Value<T>::Value(T data, char label, char op, std::array<Value<T>,2> children) : data(data), grad(0), m_prev({op, children}), label(label)
+Value<T>::Value(T data, char label) : data(data), grad(0), label(label)
 {
+    this->m_prev.op = ' ';
+    this->m_prev->children[0] = new Value<T>;
+    this->m_prev->children[1] = new Value<T>;
     // self.m_bacward =
 }
 
 template <typename T>
 Value<T> Value<T>::operator+(const Value<T> &other) const {
     Value<T> result = Value(data + other.data);
-    result.m_prev = { '+', { this, &other }};
+    result.m_prev.op = '+';
+    result.m_prev.children[0] = this;
+    result.m_prev.children[1] = &other;
 
     /* auto backward = [](Value<T> &result) { */
     /*     result.m_op1->grad += result.grad; */

@@ -21,7 +21,7 @@ public:
     char label;
 public:
     // Constructor
-    Value(T data, char label = ' ', char op = ' ', std::array<Value<T>,2> children = {});
+    Value(T data, char label = ' ');
 
     // Operator Overloading
     Value operator+(Value const &obj) const;
@@ -43,5 +43,5 @@ private:
 template<typename T>
 struct Previous{
     char m_op;
-    std::array<Value<T>,2> m_children;
+    std::array<Value<T>*,2> m_children;
 };
