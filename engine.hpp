@@ -11,8 +11,14 @@
 
 #pragma once
 
-template <typename T>
-struct Previous;
+template <typename T> class Value;
+
+// Create a template for previous elements
+template<typename T>
+struct Previous{
+    char m_op;
+    std::array<std::unique_ptr<Value<T>>, 2> m_children;
+};
 
 template <typename T> class Value {
 public:
@@ -21,7 +27,7 @@ public:
     char label;
 public:
     // Constructor
-    Value(T data, char label = ' ');
+    Value(T data, char label = ' ', char op = ' ', std::array<std::unique_ptr<Value<T>>, 2> children = {});
 
     // Operator Overloading
     Value operator+(Value const &obj) const;
@@ -37,11 +43,4 @@ public:
 
 private:
     Previous<T> m_prev;
-};
-
-// Create a template for previous elements
-template<typename T>
-struct Previous{
-    char m_op;
-    std::array<Value<T>*,2> m_children;
 };

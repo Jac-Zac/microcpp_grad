@@ -1,4 +1,4 @@
-#include "../micrograd/engine.hpp"
+#include "engine.hpp"
 
 int main() {
     // Create two Value objects
