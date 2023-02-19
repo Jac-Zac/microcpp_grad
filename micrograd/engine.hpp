@@ -7,29 +7,21 @@
 //
 
 #include<iostream>
-#include<string>
 #include<array>
-#include<set>
 
 #pragma once
 
 template <typename T>
-class Value;
-
-// Create a template for previous elements
-template<typename T>
-struct Previous{
-    char _op = ' ';
-    std::array<Value<T>,2> children;
-};
+struct Previous;
 
 template <typename T> class Value {
 public:
     T data;
     T grad;
+    char label;
 public:
     // Constructor
-    Value(T data, std::array<Value<T>,2> children, char op);
+    Value(T data, std::array<Value<T>,2> children = {}, char op = ' ', char label = ' ');
     // Operator Overloading
     Value operator+(Value const &obj) const;
     Value operator-(Value const &obj) const;
@@ -43,5 +35,12 @@ public:
     };
 
 private:
-    Previous<T> _prev;
+    Previous<T> m_prev;
+};
+
+// Create a template for previous elements
+template<typename T>
+struct Previous{
+    char m_op;
+    std::array<Value<T>,2> m_children;
 };

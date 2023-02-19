@@ -7,27 +7,32 @@
 //
 
 #include "engine.hpp"
+#include <type_traits>
 
+// Implementation of the constructor which initialize and empty m_prev and zero gradient
+// Constructor initialize m_prev with the children of the previous Value and also the operator they had if they are not given uses default values
 template <typename T>
-Value<T>::Value(T data, std::array<Value<T>,2> children, char _op=' ') : data(data), grad(0)
+Value<T>::Value(T data, std::array<Value<T>,2> children, char op, char label) : data(data), grad(0), m_prev({children,op}), label(label)
 {
-
-    // Variables to autograph the contractor
     // self.m_bacward =
-    // self.prev = (children)
 }
 
 template <typename T>
 Value<T> Value<T>::operator+(const Value<T> &other) const {
-    T result = this->data + other.data;
+    // Check if other is an object of type Value
+    if (std::is_same_v<Value<T>, decltype(other)> == false){
+        // If it is not create the corresponding object
+        Value<T> other = Value(other);
+    }
+    Value<T> result = Value(data + other.data, { *this, other }, '+');
 
     /* auto backward = [](Value<T> &result) { */
     /*     result.m_op1->grad += result.grad; */
     /*     result.m_op2->grad += result.grad; */
     /* }; */
 
-    result
     /* result.set_backward(backward); */
 
-    return result;
+    // Using move semantic to avoid unnecessary coping by value
+    return std::move(result);
 }
