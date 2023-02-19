@@ -11,18 +11,16 @@
 // Implementation of the constructor which initialize and empty m_prev and zero
 // gradient Constructor initialize m_prev with the children of the previous
 // Value and also the operator they had if they are not given uses default values
-// Multiple constructors
 template <typename T>
-Value<T>::Value(T data, char label, std::array<Value<T>, 2> children, char op)
-    : data(data), grad(0), label(label), m_prev({op, children}) {
-
+Value<T>::Value(T data, char label, char op, std::array<Value<T>,2> children) : data(data), grad(0), m_prev({op, children}), label(label)
+{
+    // self.m_bacward =
 }
 
 template <typename T>
 Value<T> Value<T>::operator+(const Value<T> &other) const {
-    // Check if other is an object of type Value
-    // Create a new Value object with the sum of the data values
-    Value<T> result(data + other.data, { *this, other }, '+', ' ');
+    Value<T> result = Value(data + other.data);
+    result.m_prev = { '+', { this, &other }};
 
     /* auto backward = [](Value<T> &result) { */
     /*     result.m_op1->grad += result.grad; */

@@ -6,12 +6,13 @@
 //  Copyright © 2023 Jacopo Zacchigna. All rights reserved.
 //
 
-#include <iostream>
-#include <array>
+#include<iostream>
+#include<array>
 
 #pragma once
 
-template <typename T> struct Previous;
+template <typename T>
+struct Previous;
 
 template <typename T> class Value {
 public:
@@ -20,7 +21,8 @@ public:
     char label;
 public:
     // Constructor
-    Value(T data, char label = ' ', std::array<Value<T>,2> children = {} , char op = ' ');
+    Value(T data, char label = ' ', char op = ' ', std::array<Value<T>,2> children = {});
+
     // Operator Overloading
     Value operator+(Value const &obj) const;
     Value operator-(Value const &obj) const;
@@ -28,7 +30,7 @@ public:
     Value operator/(Value const &obj) const;
 
     // << operator overload
-    friend std::ostream &operator<<(std::ostream &os, const Value &v) {
+    friend std::ostream& operator<<(std::ostream& os, const Value& v) {
         os << "Value(data=" << v.data << ", grad=" << v.grad << ")";
         return os;
     };
@@ -38,7 +40,8 @@ private:
 };
 
 // Create a template for previous elements
-template <typename T> struct Previous {
-    char op = ' ';
-    std::array<Value<T>,2> children = {};
+template<typename T>
+struct Previous{
+    char m_op;
+    std::array<Value<T>,2> m_children;
 };
