@@ -5,7 +5,6 @@
 //  Created by Jacopo Zacchigna on 2023-02-19
 //  Copyright © 2023 Jacopo Zacchigna. All rights reserved.
 //
-
 #include "engine.hpp"
 
 // Implementation of the constructor which initialize and empty m_prev and zero
@@ -20,15 +19,17 @@ Value<T>::Value(T data, char label, char op,
 }
 
 template <typename T>
-Value<T> Value<T>::operator+(const Value<T> &other) const {
-    Value<T> result = Value(data + other.data, ' ', '+', {this, &other});
+Value<T> Value<T>::operator+(Value<T> const &other) const {
+    Value<T> result = Value(
+        data + other.data, ' ', '+',
+        {std::make_unique<Value<T>>(*this), std::make_unique<Value<T>>(other)});
 
-    /* auto backward = [](Value<T> &result) { */
-    /*     result.m_op1->grad += result.grad; */
-    /*     result.m_op2->grad += result.grad; */
-    /* }; */
+    auto backward = [](Value<T> &result) {
+        result.m_op1->grad += result.grad;
+        result.m_op2->grad += result.grad;
+    };
 
-    /* result.set_backward(backward); */
+    result.set_backward(backward);
 
     // Using move semantic to avoid unnecessary coping by value
     return std::move(result);
