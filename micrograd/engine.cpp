@@ -7,24 +7,22 @@
 //
 
 #include "engine.hpp"
-#include <type_traits>
 
-// Implementation of the constructor which initialize and empty m_prev and zero gradient
-// Constructor initialize m_prev with the children of the previous Value and also the operator they had if they are not given uses default values
+// Implementation of the constructor which initialize and empty m_prev and zero
+// gradient Constructor initialize m_prev with the children of the previous
+// Value and also the operator they had if they are not given uses default values
+// Multiple constructors
 template <typename T>
-Value<T>::Value(T data, std::array<Value<T>,2> children, char op, char label) : data(data), grad(0), m_prev({children,op}), label(label)
-{
-    // self.m_bacward =
+Value<T>::Value(T data, char label, std::array<Value<T>, 2> children, char op)
+    : data(data), grad(0), label(label), m_prev({op, children}) {
+
 }
 
 template <typename T>
 Value<T> Value<T>::operator+(const Value<T> &other) const {
     // Check if other is an object of type Value
-    if (std::is_same_v<Value<T>, decltype(other)> == false){
-        // If it is not create the corresponding object
-        Value<T> other = Value(other);
-    }
-    Value<T> result = Value(data + other.data, { *this, other }, '+');
+    // Create a new Value object with the sum of the data values
+    Value<T> result(data + other.data, { *this, other }, '+', ' ');
 
     /* auto backward = [](Value<T> &result) { */
     /*     result.m_op1->grad += result.grad; */
