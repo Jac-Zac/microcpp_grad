@@ -11,7 +11,7 @@ int main() {
     auto d = a*b + c;
     d.label = 'd';
 
-    a = a + h;
+    b = b + h;
 
     auto e = a*b + c;
     d.label = 'e';
