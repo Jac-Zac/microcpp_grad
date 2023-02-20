@@ -17,6 +17,7 @@ public:
     T grad;
     char label;
     std::array<std::shared_ptr<Value<T>>, 2> m_prev;
+
 public:
     // Constructor
     Value(T data, char label = ' ', char op = ' ',
@@ -30,6 +31,7 @@ public:
     Value operator-(Value const &obj) const;
     Value operator*(Value const &obj) const;
     Value operator/(Value const &obj) const;
+    Value operator+=(Value const &obj);
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value &v) {
@@ -43,33 +45,40 @@ protected:
 
 template <typename T>
 Value<T> Value<T>::operator+(Value<T> const &other) const {
-    auto result =
-        Value(data + other.data, ' ', '+',
-              {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
+    auto result = Value(data + other.data, ' ', '+',
+                        {std::make_shared<Value>(std::move(*this)),
+                         std::make_shared<Value>(std::move(other))});
     return result;
 }
 
 template <typename T>
 Value<T> Value<T>::operator-(Value<T> const &other) const {
-    auto result =
-        Value(data - other.data, ' ', '-',
-              {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
+    auto result = Value(data - other.data, ' ', '-',
+                        {std::make_shared<Value>(std::move(*this)),
+                         std::make_shared<Value>(std::move(other))});
     return result;
 }
 
 template <typename T>
 Value<T> Value<T>::operator*(Value<T> const &other) const {
-    auto result =
-        Value(data * other.data, ' ', '*',
-              {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
+    auto result = Value(data * other.data, ' ', '*',
+                        {std::make_shared<Value>(std::move(*this)),
+                         std::make_shared<Value>(std::move(other))});
     return result;
 }
 
-
 template <typename T>
 Value<T> Value<T>::operator/(Value<T> const &other) const {
-    auto result =
-        Value(data / other.data, ' ', '/',
-              {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
+    auto result = Value(data / other.data, ' ', '/',
+                        {std::make_shared<Value>(std::move(*this)),
+                         std::make_shared<Value>(std::move(other))});
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator+=(Value<T> const &other){
+    auto result = Value(data += other.data, ' ', '+',
+                        {std::make_shared<Value>(std::move(*this)),
+                         std::make_shared<Value>(std::move(other))});
     return result;
 }
