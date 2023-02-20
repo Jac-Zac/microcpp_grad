@@ -2,21 +2,15 @@
 #include <__tuple>
 
 int main() {
-    double h = 0.0001;
-    // Create two Value objects
-    Value<double> a(2.0, "a");
-    Value<double> b(-3.0, "b");
-    Value<double> c(10, "d");
-
-    // First test
-    auto d1 = a * b + c;
-    d1.label = "d1";
-
-    // Print the result
-    std::cout << "result: " << d1 << std::endl;
-
-    // getter function to print to screen the prev
-    d1.get_prev();
+    Value<double> a = Value<double>(0.8814, "a");
+    Value<double> b = Value<double>(3.0, "b");
+    auto o = a.tanh();
+    o.label = "o";
+    o.grad = 1.0;
+    a.m_backward();
+    std::cout << a << "," << std::endl;
+    std::cout << o << "," << std::endl;
+    o.get_prev();
 
     return 0;
 }
