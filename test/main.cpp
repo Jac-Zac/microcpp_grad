@@ -1,21 +1,25 @@
 #include "../micrograd/engine.hpp"
 
 int main() {
+    double h = 0.0001;
     // Create two Value objects
-    Value<double> a(3.5, 'a');
-    Value<double> b(2.5, 'b');
-    Value<double> d(0.1, 'd');
+    Value<double> a(2.0, 'a');
+    Value<double> b(-3.0, 'b');
+    Value<double> c(10, 'd');
 
-    // Add the two Value objects
-    Value<double> c = a + b;
-    c.label = 'c';
+    // First test
+    auto d = a*b + c;
+    d.label = 'd';
 
-    a = a + d;
+    a = a + h;
+
+    auto e = a*b + c;
+    d.label = 'e';
 
     // Print the result
-    std::cout << "a = " << a << std::endl;
-    std::cout << "c = " << c << std::endl;
-    std::cout << "prev 0 which should be a = " << *(c.m_prev[0]) << std::endl;
+    std::cout << "d = " << d << std::endl;
+    std::cout << "e = " << e << std::endl;
+    std::cout << "Slope " << ((d - e)/h) << std::endl;
 
     return 0;
 }

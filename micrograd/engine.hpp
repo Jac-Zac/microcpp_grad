@@ -48,3 +48,28 @@ Value<T> Value<T>::operator+(Value<T> const &other) const {
               {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
     return result;
 }
+
+template <typename T>
+Value<T> Value<T>::operator-(Value<T> const &other) const {
+    auto result =
+        Value(data - other.data, ' ', '-',
+              {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator*(Value<T> const &other) const {
+    auto result =
+        Value(data * other.data, ' ', '*',
+              {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
+    return result;
+}
+
+
+template <typename T>
+Value<T> Value<T>::operator/(Value<T> const &other) const {
+    auto result =
+        Value(data / other.data, ' ', '/',
+              {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
+    return result;
+}
