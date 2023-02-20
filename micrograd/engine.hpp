@@ -10,17 +10,20 @@
 
 #include <array>
 #include <iostream>
-#include <memory>
 
 template <typename T> class Value {
 public:
     T data;
     T grad;
     char label;
+    std::array<std::shared_ptr<Value<T>>, 2> m_prev;
 public:
     // Constructor
-     Value(T data, char label = ' ', char op = ' ', std::array<std::unique_ptr<Value<T>>, 2> children = {nullptr, nullptr})
-         : data(data), label(label), m_op(op), m_children(std::move(children)), grad(0) {}
+    Value(T data, char label = ' ', char op = ' ',
+          std::array<std::shared_ptr<Value<T>>, 2> children = {nullptr,
+                                                               nullptr})
+        : data(data), label(label), m_op(op), m_prev(std::move(children)),
+          grad(0) {}
 
     // Operator Overloading
     Value operator+(Value const &obj) const;
@@ -36,11 +39,12 @@ public:
 
 protected:
     char m_op;
-    std::array<std::unique_ptr<Value<T>>, 2> m_children;
 };
 
 template <typename T>
 Value<T> Value<T>::operator+(Value<T> const &other) const {
-    auto result = Value(data + other.data, ' ', '+', {std::make_unique<Value>(*this), std::make_unique<Value>(other)});
+    auto result =
+        Value(data + other.data, ' ', '+',
+              {std::make_shared<Value>(std::move(*this)), std::make_shared<Value>(std::move(other))});
     return result;
 }
