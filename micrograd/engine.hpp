@@ -1,3 +1,4 @@
+//
 //  engine.hpp
 //  Micrograd_C++
 //
@@ -8,40 +9,18 @@
 #pragma once
 
 #include <array>
-#include <cstddef>
 #include <iostream>
 #include <memory>
-
-// Forward declaration
-template <typename T> class Value;
-
-// Create a template for previous elements
-template <typename T> struct Previous {
-    char m_op;
-    std::array<std::unique_ptr<Value<T>>, 2> m_children;
-
-    // Explicit constructor definition
-    Previous(char op, std::array<std::unique_ptr<Value<T>>, 2> children)
-        : m_op(op), m_children(std::move(children)) {}
-};
 
 template <typename T> class Value {
 public:
     T data;
     T grad;
     char label;
-
 public:
     // Constructor
-    Value(T data, char label = ' ', char op = ' ',
-          std::array<std::unique_ptr<Value<T>>, 2> children = {});
-
-    // Move constructor
-    Value(Value<T>&& other) noexcept
-        : data(std::move(other.data)),
-          grad(std::move(other.grad)),
-          label(std::move(other.label)),
-          m_prev(std::move(other.m_prev)) {}
+     Value(T data, char label = ' ', char op = ' ', std::array<std::unique_ptr<Value<T>>, 2> children = {nullptr, nullptr})
+         : data(data), label(label), m_op(op), m_children(std::move(children)), grad(0) {}
 
     // Operator Overloading
     Value operator+(Value const &obj) const;
@@ -55,28 +34,13 @@ public:
         return os;
     };
 
-private:
-    Previous<T> m_prev;
+protected:
+    char m_op;
+    std::array<std::unique_ptr<Value<T>>, 2> m_children;
 };
 
 template <typename T>
-inline Value<T>::Value(T data, char label, char op,
-                       std::array<std::unique_ptr<Value<T>>, 2> children)
-    : data(data), label(label), m_prev(op, std::move(children)), grad(0) {}
-
-template <typename T>
-inline Value<T> Value<T>::operator+(Value<T> const &other) const {
-    Value<T> result = Value(
-        data + other.data, ' ', '+',
-        {std::make_unique<Value<T>>(*this), std::make_unique<Value<T>>(other)});
-    /*
-    auto backward = [](Value<T> &result) {
-        result.m_op1->grad += result.grad;
-        result.m_op2->grad += result.grad;
-    };
-    result.set_backward(backward);
-    */
-
-    // Using move semantic to avoid unnecessary coping by value
-    return std::move(result);
+Value<T> Value<T>::operator+(Value<T> const &other) const {
+    auto result = Value(data + other.data, ' ', '+', {std::make_unique<Value>(*this), std::make_unique<Value>(other)});
+    return result;
 }
