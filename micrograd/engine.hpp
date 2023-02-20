@@ -16,8 +16,6 @@ public:
     T data;
     T grad;
     char label;
-    std::array<std::shared_ptr<Value<T>>, 2> m_prev;
-
 public:
     // Constructor
     Value(T data, char label = ' ', char op = ' ',
@@ -39,8 +37,11 @@ public:
         return os;
     };
 
+    void get_prev();
+
 protected:
     char m_op;
+    std::array<std::shared_ptr<Value<T>>, 2> m_prev;
 };
 
 template <typename T>
@@ -81,4 +82,10 @@ Value<T> Value<T>::operator+=(Value<T> const &other){
                         {std::make_shared<Value>(std::move(*this)),
                          std::make_shared<Value>(std::move(other))});
     return result;
+}
+
+// Function to get the previous elements that make up this element
+template <typename T>
+void Value<T>::get_prev(){
+    std::cout << "{" << *(this->m_prev[0]) << "," << *(this->m_prev[1]) << "}\n";
 }
