@@ -1,4 +1,3 @@
-//
 //  engine.hpp
 //  Micrograd_C++
 //
@@ -9,6 +8,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 
@@ -19,6 +19,10 @@ template <typename T> class Value;
 template <typename T> struct Previous {
     char m_op;
     std::array<std::unique_ptr<Value<T>>, 2> m_children;
+
+    // Explicit constructor definition
+    Previous(char op, std::array<std::unique_ptr<Value<T>>, 2> children)
+        : m_op(op), m_children(std::move(children)) {}
 };
 
 template <typename T> class Value {
@@ -31,6 +35,13 @@ public:
     // Constructor
     Value(T data, char label = ' ', char op = ' ',
           std::array<std::unique_ptr<Value<T>>, 2> children = {});
+
+    // Move constructor
+    Value(Value<T>&& other) noexcept
+        : data(std::move(other.data)),
+          grad(std::move(other.grad)),
+          label(std::move(other.label)),
+          m_prev(std::move(other.m_prev)) {}
 
     // Operator Overloading
     Value operator+(Value const &obj) const;
@@ -50,10 +61,8 @@ private:
 
 template <typename T>
 inline Value<T>::Value(T data, char label, char op,
-                std::array<std::unique_ptr<Value<T>>, 2> children)
-    : data(data), label(label), m_prev({op, children}), grad(0) {
-    // self.m_bacward =
-}
+                       std::array<std::unique_ptr<Value<T>>, 2> children)
+    : data(data), label(label), m_prev(op, std::move(children)), grad(0) {}
 
 template <typename T>
 inline Value<T> Value<T>::operator+(Value<T> const &other) const {
