@@ -33,6 +33,14 @@ int main() {
     // Grandina with respect to itself is 1
     // o.grad = 1.0;
 
+    o.m_backward();
+    n.m_backward();
+    n.m_backward();
+    b.m_backward();
+    x1w1_x2w2.m_backward();
+    x1w1.m_backward();
+    x2w2.m_backward();
+
     //    std::cout << "Children count= " << o.m_prev[0].use_count() << "\n";
 
     //   n.data = 100;

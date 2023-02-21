@@ -18,7 +18,7 @@
 template <typename T> class Value {
 public:
     T data;            // data of the value
-    mutable T grad;    // gradient which by default is zero and it is mutable
+    T grad;    // gradient which by default is zero
     std::string label; // label of the value
 public:
     // Constructor
@@ -39,11 +39,11 @@ public:
     };
 
     void get_prev() const;
-
 private:
     std::string m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
-    std::function<void()> m_backward; // lambda function
+public:
+    void m_backward(); // lambda function
 };
 
 // ==================== Implementation =====================
@@ -51,44 +51,43 @@ private:
 template <typename T>
 Value<T>::Value(T data, std::string label, std::string op,
                 std::array<Value<T> *, 2> children)
-    : data(data), label(label), m_op(op), m_prev(children), grad(0) {
-    // Initialize the lambda to none
-    m_backward = []() {};
+    : data(data), label(label), m_op(op), m_prev(children), grad(0) {}
+
+template <typename T>
+void Value<T>::m_backward(){
+    switch(this->label){
+        case "+":
+            // Should just move the gradient along to both of them
+            this->m_prev[0]->grad = 1.0 * this->grad;
+            this->m_prev[1]->grad = 1.0 * this->grad;
+            break;
+        case "*":
+            this->m_prev[0]->grad += this->m_prev[1]->data * this->grad;
+            this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
+            /* break; */
+        case "tanh":
+            this->m_prev[0]->grad = (1 - pow(this->data, 2)) * this->grad;
+            break;
+        default:
+            break;
+    }
 }
 
 template <typename T>
 Value<T> Value<T>::operator+(Value<T> &other) {
-    auto out =
-        Value(data + other.data, "", "+", {this, &other});
-    out.m_backward = [&]() mutable {
-        // Should just move the gradient along to both of them
-        this->grad = 1.0 * out.grad;
-        other.grad = 1.0 * out.grad;
-    };
-    return out;
+    return Value(data + other.data, "", "+", {this, &other});
 }
 
 template <typename T>
 Value<T> Value<T>::operator*(Value<T> &other){
-    auto out =
-        Value(data * other.data, "", "*", {this, &other});
-    out.m_backward = [this, &other, out]() mutable {
-        this->grad += other.data * out.grad;
-        other.grad += this->data * out.grad;
-    };
-    return out;
+    return Value(data * other.data, "", "*", {this, &other});
 }
 
 // Function to get the previous elements that make up this element
 template <typename T> Value<T> Value<T>::tanh() {
     T x = this->data;
     T t = (exp(2 * x) - 1) / (exp(2 * x) + 1);
-    auto out = Value(t, "", "tanh", {this, nullptr});
-    out.m_backward = [this, &out, t]() mutable {
-        // Chain rule with the derivative of tanh
-        this->grad = (1 - pow(t, 2)) * out.grad;
-    };
-    return out;
+    return Value(t, "", "tanh", {this, nullptr});
 }
 
 // Function to get the previous elements that make up this element
