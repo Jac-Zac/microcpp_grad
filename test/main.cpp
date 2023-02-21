@@ -45,7 +45,9 @@ int main() {
 
 //   n.data = 100;
 
-    std::cout << o << "\n";
+    std::cout << (o.m_prev[0]) << "\n";
+    std::cout << *(o.m_prev[0]) << "\n";
+    std::cout << &n << "\n";
     std::cout << n << "\n";
     std::cout << b << "\n";
     std::cout << x1w1_x2w2 << "\n";

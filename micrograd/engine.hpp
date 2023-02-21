@@ -23,12 +23,7 @@ public:
     std::function<void()> m_backward; // lambda function
 public:
     // Constructor
-    Value(T data, std::string label = "", std::string op = "",
-          std::array<std::shared_ptr<Value<T>>, 2> children = {})
-        : data(data), label(label), m_op(op), m_prev{std::move(children)}, grad(0) {
-        // Initialize the lambda to none
-        m_backward = []() {};
-    }
+    Value(T data, std::string label = "", std::string op = "", std::array<Value<T>*,2> children = {});
 
     // Operator Overloading
     Value operator+(Value const &other) const;
@@ -37,7 +32,7 @@ public:
     Value tanh();
 
     // << operator overload
-    friend std::ostream &operator<<(std::ostream &os, const Value &v) {
+    friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
         os << "Value(data=" << v.data << ", grad=" << v.grad
            << ", label=" << v.label << ")";
         return os;
@@ -47,14 +42,22 @@ public:
 
 public:
     std::string m_op;
-    std::array<std::shared_ptr<Value<T>>, 2> m_prev;
+    std::array<Value<T>*, 2> m_prev;
 };
+
+// ==================== Implementation =====================
+
+template <typename T>
+Value<T>::Value(T data, std::string label, std::string op, std::array<Value<T>*,2> children)
+    : data(data), label(label), m_op(op), m_prev(children), grad(0) {
+    // Initialize the lambda to none
+    m_backward = []() {};
+}
 
 template <typename T>
 Value<T> Value<T>::operator+(Value<T> const &other) const {
     auto out =
-        Value(data + other.data, "", "+",
-              {std::make_shared<Value<T>>(*this), std::make_shared<Value<T>>(other)});
+        Value(data + other.data, "", "+", {this, &other});
     out.m_backward = [&]() mutable {
         // Should just move the gradient along to both of them
         this->grad = 1.0 * out.grad;
@@ -66,8 +69,7 @@ Value<T> Value<T>::operator+(Value<T> const &other) const {
 template <typename T>
 Value<T> Value<T>::operator*(Value<T> const &other) const {
     auto out =
-        Value(data * other.data, "", "*",
-              {std::make_shared<Value<T>>(*this), std::make_shared<Value<T>>(other)});
+        Value(data * other.data, "", "*", {this, &other});
     out.m_backward = [&]() mutable {
         this->grad += other.data * out.grad;
         other.grad += this->data * out.grad;
@@ -79,7 +81,7 @@ Value<T> Value<T>::operator*(Value<T> const &other) const {
 template <typename T> Value<T> Value<T>::tanh() {
     T x = this->data;
     T t = (exp(2 * x) - 1) / (exp(2 * x) + 1);
-    auto out = Value(t, "", "tanh", {std::make_shared<Value<T>>(*this), nullptr});
+    auto out = Value(t, "", "tanh", {this, nullptr});
     out.m_backward = [this, &out, t]() mutable {
         // Chain rule with the derivative of tanh
         this->grad = (1 - pow(t, 2)) * out.grad;
