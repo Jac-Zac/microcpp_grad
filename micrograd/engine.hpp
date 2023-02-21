@@ -26,8 +26,8 @@ public:
           std::array<Value<T> *, 2> children = {});
 
     // Operator Overloading
-    Value operator+(Value const &other) const;
-    Value operator*(Value const &other) const;
+    Value operator+(Value &other);
+    Value operator*(Value &other);
 
     Value tanh();
 
@@ -57,10 +57,9 @@ Value<T>::Value(T data, std::string label, std::string op,
 }
 
 template <typename T>
-Value<T> Value<T>::operator+(Value<T> const &other) const {
+Value<T> Value<T>::operator+(Value<T> &other) {
     auto out =
-        Value(data + other.data, "", "+",
-              {const_cast<Value<T> *>(this), const_cast<Value<T> *>(&other)});
+        Value(data + other.data, "", "+", {this, &other});
     out.m_backward = [&]() mutable {
         // Should just move the gradient along to both of them
         this->grad = 1.0 * out.grad;
@@ -70,11 +69,10 @@ Value<T> Value<T>::operator+(Value<T> const &other) const {
 }
 
 template <typename T>
-Value<T> Value<T>::operator*(Value<T> const &other) const {
+Value<T> Value<T>::operator*(Value<T> &other){
     auto out =
-        Value(data * other.data, "", "*",
-              {static_cast<Value<T> *>(this), const_cast<Value<T> *>(&other)});
-    out.m_backward = [&]() mutable {
+        Value(data * other.data, "", "*", {this, &other});
+    out.m_backward = [this, &other, out]() mutable {
         this->grad += other.data * out.grad;
         other.grad += this->data * out.grad;
     };
@@ -85,7 +83,7 @@ Value<T> Value<T>::operator*(Value<T> const &other) const {
 template <typename T> Value<T> Value<T>::tanh() {
     T x = this->data;
     T t = (exp(2 * x) - 1) / (exp(2 * x) + 1);
-    auto out = Value(t, "", "tanh", {const_cast<Value<T> *>(this), nullptr});
+    auto out = Value(t, "", "tanh", {this, nullptr});
     out.m_backward = [this, &out, t]() mutable {
         // Chain rule with the derivative of tanh
         this->grad = (1 - pow(t, 2)) * out.grad;
