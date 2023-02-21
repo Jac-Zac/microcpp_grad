@@ -31,32 +31,25 @@ int main() {
     n.label = "n";
 
     // Grandina with respect to itself is 1
-    o.grad = 1.0;
+    // o.grad = 1.0;
 
-    // Call backward
-    o.m_backward();
-    n.m_backward();
-    b.m_backward();
-    x1w1_x2w2.m_backward();
-    x1w1.m_backward();
-    x2w2.m_backward();
+    //    std::cout << "Children count= " << o.m_prev[0].use_count() << "\n";
 
-//    std::cout << "Children count= " << o.m_prev[0].use_count() << "\n";
+    //   n.data = 100;
 
-//   n.data = 100;
+    /* std::cout << (o.m_prev[0]) << "\n"; */
+    /* std::cout << *(o.m_prev[0]) << "\n"; */
+    /* std::cout << &n << "\n"; */
 
-    std::cout << (o.m_prev[0]) << "\n";
-    std::cout << *(o.m_prev[0]) << "\n";
-    std::cout << &n << "\n";
     std::cout << n << "\n";
     std::cout << b << "\n";
     std::cout << x1w1_x2w2 << "\n";
-    std::cout << x1w1<< "\n";
-    std::cout << x2w2<< "\n";
-    std::cout << w2<< "\n";
-    std::cout << x2<< "\n";
-    std::cout << x1<< "\n";
-    std::cout << w1<< "\n";
+    std::cout << x1w1 << "\n";
+    std::cout << x2w2 << "\n";
+    std::cout << w2 << "\n";
+    std::cout << x2 << "\n";
+    std::cout << x1 << "\n";
+    std::cout << w1 << "\n";
 
     return 0;
 }
