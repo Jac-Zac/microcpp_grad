@@ -127,6 +127,7 @@ template <typename T>
 Value<T> Value<T>::operator+(T other){
     Value<T> result = Value<T>(data + other, "", SUM);
     result.m_prev[0] = this;
+    result.m_prev[1] = std::move(new Value<T>(other));
     return result;
 }
 
