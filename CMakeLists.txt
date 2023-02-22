@@ -8,8 +8,8 @@ set(CMAKE_CXX_STANDARD 17)
 file(GLOB_RECURSE SOURCES
       micrograd/*.cpp
       micrograd/**/*.cpp
-      test/*.cpp
-      test/**/*.cpp
+      test/main.cpp
+      # test/**/*.cpp
 )
 file(GLOB_RECURSE HEADERS
       micrograd/*hpp

@@ -43,7 +43,11 @@ int main() {
     o.label = "o";
 
     // Grandina with respect to itself is 1
-    o.backprop();
+    o.backword();
     o.print_graph();
 }
 ```
+
+### TODO
+I wrote an alternative way, I'd like to not use raw pointers though.
+Also I want to make the other ops work
