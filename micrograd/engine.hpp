@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <type_traits>
 #include <unordered_set>
 
 enum value_ops : unsigned char
@@ -29,18 +30,20 @@ public:
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
+    ~Value();
 
     // Operator Overloading
+    // rvalues version
     Value operator+(Value &other);
-    Value operator+(T other);
     Value operator*(Value &other);
-    Value operator*(T other);
     Value operator-(Value &other);
-    Value operator-(T other);
     Value operator/(Value &other);
-    Value operator/(T other);
-    // pow
     Value operator^(Value &other);
+    // lvalues version
+    Value operator+(T other);
+    Value operator*(T other);
+    Value operator-(T other);
+    Value operator/(T other);
     Value operator^(T other);
 
     // << operator overload
@@ -74,6 +77,98 @@ protected:
 template <typename T>
 Value<T>::Value(T data, std::string label, char op)
     : data(data), label(label), m_op(op), grad(0), m_prev({nullptr,nullptr}) {}
+
+template<typename T>
+Value<T>::~Value() {
+    if (m_prev[1] != nullptr) {
+        delete m_prev[1];
+    }
+}
+
+template <typename T>
+Value<T> Value<T>::operator+(Value<T> &other) {
+    Value<T> result = Value<T>(data + other.data, "", SUM);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator+(T other){
+    Value<T> result = Value<T>(data + other, "", SUM);
+    result.m_prev[0] = this;
+    result.m_prev[1] = new Value<T>(other);
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator-(T other){
+    Value<T> result = Value<T>(data - other, "", DIF);
+    result.m_prev[0] = this;
+    result.m_prev[1] = new Value<T>(other);
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator*(Value<T> &other){
+    Value<T> result = Value<T>(data * other.data, "", MUL);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator*(T other){
+    Value<T> result = Value<T>(data * other, "", MUL);
+    result.m_prev[0] = this;
+    result.m_prev[1] = new Value<T>(other);
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator/(Value<T> &other){
+    Value<T> result = Value<T>(data / other.data, "", DIV);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator/(T other){
+    Value<T> result = Value<T>(data / other, "", DIV);
+    result.m_prev[0] = this;
+    result.m_prev[1] = new Value<T>(other);
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator^(Value<T> &other){
+    Value<T> result = Value<T>(pow(data,other.data), "", POW);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::neg_value() {
+    Value<T> result = *this * (-1);
+    result.label = NEG;
+    std::cout<< result;
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::exp_value() {
+    Value<T> result = Value<T>(exp(data),"",EXP);
+    result.m_prev[0] = this;
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::tanh() {
+    T x = this->data;
+    T tanh = (exp(2 * x) - 1) / (exp(2 * x) + 1);
+    Value<T> result = Value<T>(tanh , "", TANH);
+    result.m_prev[0] = this;
+    return result;
+}
 
 template <typename T>
 void Value<T>::m_backward(){
@@ -113,96 +208,6 @@ void Value<T>::m_backward(){
         default:
             break;
     }
-}
-
-template <typename T>
-Value<T> Value<T>::operator+(Value<T> &other) {
-    Value<T> result = Value<T>(data + other.data, "", SUM);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator+(T other){
-    Value<T> result = Value<T>(data + other, "", SUM);
-    result.m_prev[0] = this;
-    result.m_prev[1] = std::move(new Value<T>(other));
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator-(Value<T> &other){
-    Value<T> result = Value<T>(data - other.data, "", DIF);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator-(T other){
-    Value<T> result = Value<T>(data - other, "", DIF);
-    result.m_prev[0] = this;
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator*(Value<T> &other){
-    Value<T> result = Value<T>(data * other.data, "", MUL);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator*(T other){
-    Value<T> result = Value<T>(data * other, "", MUL);
-    result.m_prev[0] = this;
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator/(Value<T> &other){
-    Value<T> result = Value<T>(data / other.data, "", DIV);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator/(T other){
-    Value<T> result = Value<T>(data / other, "", DIV);
-    result.m_prev[0] = this;
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator^(Value<T> &other){
-    Value<T> result = Value<T>(pow(data,other.data), "", POW);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::neg_value() {
-    Value<T> result = *this * (-1);
-    result.label = NEG;
-    std::cout<< result;
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::exp_value() {
-    Value<T> result = Value<T>(exp(data),"",EXP);
-    result.m_prev[0] = this;
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::tanh() {
-    T x = this->data;
-    T tanh = (exp(2 * x) - 1) / (exp(2 * x) + 1);
-    Value<T> result = Value<T>(tanh , "", TANH);
-    result.m_prev[0] = this;
-    return result;
 }
 
 template <typename T>
