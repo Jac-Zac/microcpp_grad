@@ -18,7 +18,7 @@
 
 enum value_ops : unsigned char
 {
-    SUM = '+', DIF = '-', MUL = '*', DIV = '/', POW = '^' , EXP = 'e', TANH = 't', RELU = 'r'
+    SUM = '+', DIF = '-', MUL = '*', DIV = '/', POW = '^' , EXP = 'e', NEG = 'n', TANH = 't', RELU = 'r'
 };
 
 template <typename T> class Value {
@@ -34,6 +34,9 @@ public:
     Value operator+(Value &other);
     Value operator+(T other);
     Value operator*(Value &other);
+    Value operator*(T other);
+    Value operator-(Value &other);
+    Value operator-(T other);
     Value operator/(Value &other);
 
     // << operator overload
@@ -77,14 +80,17 @@ void Value<T>::m_backward(){
             this->m_prev[0]->grad += 1.0 * this->grad;
             this->m_prev[1]->grad += 1.0 * this->grad;
             break;
+        case DIV:
+            break;
         case MUL:
             this->m_prev[0]->grad += this->m_prev[1]->data * this->grad;
             this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
             break;
         case POW:
-            this->m_prev[0]->grad += (this->m_prev[1] * pow(this->m_prev[0],(this->m_prev[1] - 1))) * this->grad;
+            // this->m_prev[0]->grad += (this->m_prev[1] * pow(this->m_prev[0],(this->m_prev[1] - 1))) * this->grad;
             break;
-        case TANH:
+        case DIV:
+            break;
         case EXP:
             // e^x is e^x which I already saved in this->data
             this->m_prev[0]->grad += this->data * this->grad;
@@ -99,40 +105,64 @@ void Value<T>::m_backward(){
 
 template <typename T>
 Value<T> Value<T>::operator+(Value<T> &other) {
-    Value<T>* result = new Value<T>(data + other.data, "", SUM);
-    result->m_prev[0] = this;
-    result->m_prev[1] = &other;
-    return *result;
+    Value<T> result = Value<T>(data + other.data, "", SUM);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
 }
 
 template <typename T>
 Value<T> Value<T>::operator+(T other){
-    Value<T>* result = new Value<T>(data + other, "");
-    result->m_prev[0] = this;
-    return *result;
+    Value<T> result = Value<T>(data + other, "", SUM);
+    result.m_prev[0] = this;
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator-(Value<T> &other){
+    Value<T> result = Value(data - other.data , "",DIF);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator-(T other){
+    Value<T> result = Value<T>(data + other, "", DIF);
+    result.m_prev[0] = this;
+    return result;
 }
 
 template <typename T>
 Value<T> Value<T>::operator*(Value<T> &other){
-    Value<T>* result = new Value<T>(data * other.data, "", MUL);
-    result->m_prev[0] = this;
-    result->m_prev[1] = &other;
-    return *result;
+    Value<T> result = Value<T>(data * other.data, "", MUL);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T>
+Value<T> Value<T>::operator*(T other){
+    Value<T> result = Value<T>(data * other, "", MUL);
+    result.m_prev[0] = this;
+    return result;
 }
 
 template <typename T>
 Value<T> Value<T>::operator/(Value<T> &other){
     // a / b = a * b^(-1)
-    Value<T>* result = Value(*this * this->pow_value(-1) , "", DIV);
-    result->m_prev[0] = this;
-    result->m_prev[1] = &other;
-    return *result;
+    Value<T> result = Value(*this * this->pow_value(-1) , "", DIV);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
 }
 
-/*
 template <typename T> Value<T> Value<T>::pow_value(T other) {
+    Value<T> result = Value(*this * this->pow_value(-1) , "", POW);
+    result.m_prev[0] = this;
     return Value(pow(this->data, other), "",POW);
 }
+
 
 template <typename T> Value<T> Value<T>::exp_value() {
     return Value(exp(this->data), "",EXP);
@@ -141,9 +171,10 @@ template <typename T> Value<T> Value<T>::exp_value() {
 template <typename T> Value<T> Value<T>::tanh() {
     T x = this->data;
     T t = (exp(2 * x) - 1) / (exp(2 * x) + 1);
-    return Value(t, "",TANH, {this, nullptr});
+    Value<T> result = Value(t , "", TANH);
+    result.m_prev[0] = this;
+    return result;
 }
-*/
 
 template <typename T>
 void Value<T>::topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_values) {
