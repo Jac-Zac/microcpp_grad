@@ -10,7 +10,9 @@ int main() {
     /* b.print_graph(); */
     auto a = Value<double>(2.0, "a");
     auto b = Value<double>(4.0, "b");
-    auto c = a - b; c.label = 'c';
+    auto c = a.exp_value();
+    c.label = 'c';
     // This hash to print the value object a
+    c.backword();
     c.print_graph();
 }

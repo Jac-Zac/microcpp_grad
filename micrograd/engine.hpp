@@ -38,6 +38,10 @@ public:
     Value operator-(Value &other);
     Value operator-(T other);
     Value operator/(Value &other);
+    Value operator/(T other);
+    // pow
+    Value operator^(Value &other);
+    Value operator^(T other);
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -47,7 +51,7 @@ public:
     };
 
     // Other ops
-    Value pow_value(T other);
+    Value neg_value();
     Value exp_value();
     Value tanh();
 
@@ -80,16 +84,21 @@ void Value<T>::m_backward(){
             this->m_prev[0]->grad += 1.0 * this->grad;
             this->m_prev[1]->grad += 1.0 * this->grad;
             break;
-        case DIV:
+        case DIF:
+            this->m_prev[0]->grad += 1.0 * this->grad;
+            this->m_prev[1]->grad -= 1.0 * this->grad;
             break;
         case MUL:
             this->m_prev[0]->grad += this->m_prev[1]->data * this->grad;
             this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
             break;
-        case POW:
-            // this->m_prev[0]->grad += (this->m_prev[1] * pow(this->m_prev[0],(this->m_prev[1] - 1))) * this->grad;
-            break;
         case DIV:
+            // think about it
+            // this->m_prev[0]->grad += (this->m_prev[1]->data)/(this->grad;
+            // this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
+            break;
+        case POW:
+            this->m_prev[0]->grad += (this->m_prev[1]->data * pow(this->m_prev[0]->data,(this->m_prev[1]->data - 1))) * this->grad;
             break;
         case EXP:
             // e^x is e^x which I already saved in this->data
@@ -97,6 +106,9 @@ void Value<T>::m_backward(){
             break;
         case TANH:
             this->m_prev[0]->grad += (1 - pow(this->data, 2)) * this->grad;
+            break;
+        case RELU:
+            // this->m_prev[0]->grad += (1 - pow(this->data, 2)) * this->grad;
             break;
         default:
             break;
@@ -120,7 +132,7 @@ Value<T> Value<T>::operator+(T other){
 
 template <typename T>
 Value<T> Value<T>::operator-(Value<T> &other){
-    Value<T> result = Value(data - other.data , "",DIF);
+    Value<T> result = Value<T>(data - other.data, "", DIF);
     result.m_prev[0] = this;
     result.m_prev[1] = &other;
     return result;
@@ -128,7 +140,7 @@ Value<T> Value<T>::operator-(Value<T> &other){
 
 template <typename T>
 Value<T> Value<T>::operator-(T other){
-    Value<T> result = Value<T>(data + other, "", DIF);
+    Value<T> result = Value<T>(data - other, "", DIF);
     result.m_prev[0] = this;
     return result;
 }
@@ -150,28 +162,46 @@ Value<T> Value<T>::operator*(T other){
 
 template <typename T>
 Value<T> Value<T>::operator/(Value<T> &other){
-    // a / b = a * b^(-1)
-    Value<T> result = Value(*this * this->pow_value(-1) , "", DIV);
+    Value<T> result = Value<T>(data / other.data, "", DIV);
     result.m_prev[0] = this;
     result.m_prev[1] = &other;
     return result;
 }
 
-template <typename T> Value<T> Value<T>::pow_value(T other) {
-    Value<T> result = Value(*this * this->pow_value(-1) , "", POW);
+template <typename T>
+Value<T> Value<T>::operator/(T other){
+    Value<T> result = Value<T>(data / other, "", DIV);
     result.m_prev[0] = this;
-    return Value(pow(this->data, other), "",POW);
+    return result;
 }
 
+template <typename T>
+Value<T> Value<T>::operator^(Value<T> &other){
+    Value<T> result = Value<T>(pow(data,other.data), "", POW);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+/*
+template <typename T> Value<T> Value<T>::neg_value() {
+    Value<T> result = *this * -1;
+    result.label = NEG;
+    result.m_prev[0] = this;
+    return result;
+}
+*/
 
 template <typename T> Value<T> Value<T>::exp_value() {
-    return Value(exp(this->data), "",EXP);
+    Value<T> result = Value<T>(exp(data),"",EXP);
+    result.m_prev[0] = this;
+    return result;
 }
 
 template <typename T> Value<T> Value<T>::tanh() {
     T x = this->data;
-    T t = (exp(2 * x) - 1) / (exp(2 * x) + 1);
-    Value<T> result = Value(t , "", TANH);
+    T tanh = (exp(2 * x) - 1) / (exp(2 * x) + 1);
+    Value<T> result = Value<T>(tanh , "", TANH);
     result.m_prev[0] = this;
     return result;
 }
