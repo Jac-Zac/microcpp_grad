@@ -31,10 +31,8 @@ int main() {
     n.label = "n";
 
     // Grandina with respect to itself is 1
-    // o.grad = 1.0;
-
+    o.grad = 1.0;
     o.m_backward();
-    n.m_backward();
     n.m_backward();
     b.m_backward();
     x1w1_x2w2.m_backward();
@@ -49,6 +47,7 @@ int main() {
     /* std::cout << *(o.m_prev[0]) << "\n"; */
     /* std::cout << &n << "\n"; */
 
+    std::cout << o << "\n";
     std::cout << n << "\n";
     std::cout << b << "\n";
     std::cout << x1w1_x2w2 << "\n";

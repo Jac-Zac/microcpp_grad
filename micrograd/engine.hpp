@@ -15,6 +15,8 @@
 #include <memory>
 #include <string>
 
+// Instead of using string use an enum the implementation of different op
+
 template <typename T> class Value {
 public:
     T data;            // data of the value
@@ -39,7 +41,7 @@ public:
     };
 
     void get_prev() const;
-private:
+protected:
     std::string m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
 public:
@@ -55,21 +57,19 @@ Value<T>::Value(T data, std::string label, std::string op,
 
 template <typename T>
 void Value<T>::m_backward(){
-    switch(this->label){
-        case "+":
-            // Should just move the gradient along to both of them
-            this->m_prev[0]->grad = 1.0 * this->grad;
-            this->m_prev[1]->grad = 1.0 * this->grad;
-            break;
-        case "*":
+    if(this->m_op == "+"){
+        // Should just move the gradient along to both of them
+        this->m_prev[0]->grad = 1.0 * this->grad;
+        this->m_prev[1]->grad = 1.0 * this->grad;
+    }else{
+        if(this->m_op == "*"){
             this->m_prev[0]->grad += this->m_prev[1]->data * this->grad;
             this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
-            /* break; */
-        case "tanh":
-            this->m_prev[0]->grad = (1 - pow(this->data, 2)) * this->grad;
-            break;
-        default:
-            break;
+        }else{
+            if(this->m_op == "tanh"){
+                this->m_prev[0]->grad = (1 - pow(this->data, 2)) * this->grad;
+            }
+        }
     }
 }
 
