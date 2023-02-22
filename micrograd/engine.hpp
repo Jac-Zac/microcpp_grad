@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cmath>
+#include <stack>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -108,32 +109,42 @@ template <typename T> void Value<T>::get_prev() const {
 template <typename T>
 void Value<T>::topo_sort_helper(Value<T>* v, std::unordered_map<Value<T>*, bool>& visited,
                                 std::vector<Value<T>*>& sorted_values) {
+
+    // Create a stack to hold the nodes
+    std::stack<Value<T>*> stack;
+
+    // Mark the current node as visited
     visited[v] = true;
 
-    for (Value<T>* child : v->m_prev) {
-        if (child != nullptr && !visited[child]) {
-            topo_sort_helper(child, visited, sorted_values);
+    // Push the current node to the stack
+    stack.push(v);
+
+    // Loop until the stack is empty
+    while (!stack.empty()) {
+        // Get the top node of the stack
+        Value<T>* current = stack.top();
+        stack.pop();
+
+        // Add the current node to the sorted values list
+        sorted_values.emplace_back(current);
+
+        // Iterate over the previous nodes of the current node
+        for (Value<T>* child : current->m_prev) {
+            // If the previous node is not null and has not been visited yet
+            if (child != nullptr && !visited[child]) {
+                // Mark it as visited and push it to the stack
+                visited[child] = true;
+                stack.push(child);
+            }
         }
     }
-
-    sorted_values.push_back(v);
 }
-
 template <typename T>
 void Value<T>::backprop() {
     std::vector<Value<T>*> sorted_values;
     std::unordered_map<Value<T>*, bool> visited;
 
-    for (Value<T>* v : this->m_prev) {
-        if (v != nullptr && !visited[v]) {
-            topo_sort_helper(v, visited, sorted_values);
-        }
-    }
-
-    sorted_values.push_back(this);
-
-    // Reverse the list
-    std::reverse(sorted_values.begin(), sorted_values.end());
+    topo_sort_helper(this, visited, sorted_values);
 
     // Set the derivative of dx/dx to 1
     this->grad = 1.0;
