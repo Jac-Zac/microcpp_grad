@@ -183,14 +183,12 @@ Value<T> Value<T>::operator^(Value<T> &other){
     return result;
 }
 
-/*
 template <typename T> Value<T> Value<T>::neg_value() {
-    Value<T> result = *this * -1;
+    Value<T> result = *this * (-1);
     result.label = NEG;
-    result.m_prev[0] = this;
+    std::cout<< result;
     return result;
 }
-*/
 
 template <typename T> Value<T> Value<T>::exp_value() {
     Value<T> result = Value<T>(exp(data),"",EXP);
