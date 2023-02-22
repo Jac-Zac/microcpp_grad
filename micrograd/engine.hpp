@@ -10,10 +10,11 @@
 
 #include <array>
 #include <cmath>
-#include <functional>
-#include <iostream>
-#include <memory>
 #include <string>
+#include <vector>
+#include <iostream>
+#include <functional>
+#include <unordered_map>
 
 // Instead of using string use an enum the implementation of different op
 
@@ -30,9 +31,6 @@ public:
     // Operator Overloading
     Value operator+(Value &other);
     Value operator*(Value &other);
-
-    Value tanh();
-
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
         os << "Value(data=" << v.data << ", grad=" << v.grad
@@ -40,12 +38,19 @@ public:
         return os;
     };
 
+    // Other ops
+    Value tanh();
+    // Value relu();
+
+    void backprop();
     void get_prev() const;
 protected:
     std::string m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
+    // Helper function to make a topological sort
+    void topo_sort_helper(Value<T>* v, std::unordered_map<Value<T>*, bool>& visited, std::vector<Value<T>*>& sorted_values);
 public:
-    void m_backward(); // lambda function
+    void m_backward(); // 1 step of backdrop
 };
 
 // ==================== Implementation =====================
@@ -97,5 +102,44 @@ template <typename T> void Value<T>::get_prev() const {
                   << "}\n";
     } else {
         std::cout << "{" << *(this->m_prev[0]) << "}\n";
+    }
+}
+
+template <typename T>
+void Value<T>::topo_sort_helper(Value<T>* v, std::unordered_map<Value<T>*, bool>& visited,
+                                std::vector<Value<T>*>& sorted_values) {
+    visited[v] = true;
+
+    for (Value<T>* child : v->m_prev) {
+        if (child != nullptr && !visited[child]) {
+            topo_sort_helper(child, visited, sorted_values);
+        }
+    }
+
+    sorted_values.push_back(v);
+}
+
+template <typename T>
+void Value<T>::backprop() {
+    std::vector<Value<T>*> sorted_values;
+    std::unordered_map<Value<T>*, bool> visited;
+
+    for (Value<T>* v : this->m_prev) {
+        if (v != nullptr && !visited[v]) {
+            topo_sort_helper(v, visited, sorted_values);
+        }
+    }
+
+    sorted_values.push_back(this);
+
+    // Reverse the list
+    std::reverse(sorted_values.begin(), sorted_values.end());
+
+    // Set the derivative of dx/dx to 1
+    this->grad = 1.0;
+
+    // Call backward in topological order applying the chain rule automatically
+    for (auto value : sorted_values){
+        value->m_backward();
     }
 }

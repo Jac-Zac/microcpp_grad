@@ -5,11 +5,9 @@ int main() {
     // Creating a single perception
 
     // Input x1, x2
-    auto x1 = Value<double>(2.0, "x1");
-    auto x2 = Value<double>(0.0, "x2");
+    auto x1 = Value<double>(2.0, "x1"), x2 = Value<double>(0.0, "x2");
     // Weight w1, w2
-    auto w1 = Value<double>(-3.0, "w1");
-    auto w2 = Value<double>(1.0, "w2");
+    auto w1 = Value<double>(-3.0, "w1"), w2 = Value<double>(1.0, "w2");
 
     // products
     auto x1w1 = x1 * w1;
@@ -26,26 +24,12 @@ int main() {
 
     // new neuron
     auto n = x1w1_x2w2 + b;
+    n.label = "n";
     auto o = n.tanh();
     o.label = "o";
-    n.label = "n";
 
     // Grandina with respect to itself is 1
-    o.grad = 1.0;
-    o.m_backward();
-    n.m_backward();
-    b.m_backward();
-    x1w1_x2w2.m_backward();
-    x1w1.m_backward();
-    x2w2.m_backward();
-
-    //    std::cout << "Children count= " << o.m_prev[0].use_count() << "\n";
-
-    //   n.data = 100;
-
-    /* std::cout << (o.m_prev[0]) << "\n"; */
-    /* std::cout << *(o.m_prev[0]) << "\n"; */
-    /* std::cout << &n << "\n"; */
+    o.backprop();
 
     std::cout << o << "\n";
     std::cout << n << "\n";
