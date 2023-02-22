@@ -15,7 +15,7 @@
 #include <vector>
 #include <iostream>
 #include <functional>
-#include <unordered_map>
+#include <unordered_set>
 
 // Instead of using string use an enum the implementation of different op
 
@@ -49,7 +49,7 @@ protected:
     std::string m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
     // Helper function to make a topological sort
-    void topo_sort_helper(Value<T>* v, std::unordered_map<Value<T>*, bool>& visited, std::vector<Value<T>*>& sorted_values);
+    void topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_values);
 public:
     void m_backward(); // 1 step of backdrop
 };
@@ -107,14 +107,12 @@ template <typename T> void Value<T>::get_prev() const {
 }
 
 template <typename T>
-void Value<T>::topo_sort_helper(Value<T>* v, std::unordered_map<Value<T>*, bool>& visited,
-                                std::vector<Value<T>*>& sorted_values) {
+void Value<T>::topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_values) {
 
+    // Create a set to keep track of the visited nodes
+    std::unordered_set<Value<T>*> visited;
     // Create a stack to hold the nodes
     std::stack<Value<T>*> stack;
-
-    // Mark the current node as visited
-    visited[v] = true;
 
     // Push the current node to the stack
     stack.push(v);
@@ -125,26 +123,32 @@ void Value<T>::topo_sort_helper(Value<T>* v, std::unordered_map<Value<T>*, bool>
         Value<T>* current = stack.top();
         stack.pop();
 
-        // Add the current node to the sorted values list
+        // If the current node has already been visited, continue to the next iteration
+        if (visited.count(current) > 0) {
+            continue;
+        }
+
+        // Mark the current node as visited and add it to the sorted values list
+        visited.insert(current);
         sorted_values.emplace_back(current);
 
         // Iterate over the previous nodes of the current node
         for (Value<T>* child : current->m_prev) {
-            // If the previous node is not null and has not been visited yet
-            if (child != nullptr && !visited[child]) {
-                // Mark it as visited and push it to the stack
-                visited[child] = true;
+            // If the previous node is not null, push it to the stack
+            if (child != nullptr) {
                 stack.push(child);
             }
         }
     }
 }
+
 template <typename T>
 void Value<T>::backprop() {
+    // Create a vector to hold the sorted values
     std::vector<Value<T>*> sorted_values;
-    std::unordered_map<Value<T>*, bool> visited;
 
-    topo_sort_helper(this, visited, sorted_values);
+    // Perform topological sort starting from the current node
+    topo_sort_helper(this, sorted_values);
 
     // Set the derivative of dx/dx to 1
     this->grad = 1.0;
