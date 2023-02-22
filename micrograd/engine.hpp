@@ -21,9 +21,9 @@
 
 template <typename T> class Value {
 public:
-    T data;            // data of the value
-    T grad;    // gradient which by default is zero
-    std::string label; // label of the value
+    T data;             // data of the value
+    T grad;             // gradient which by default is zero
+    std::string label;  // label of the value
 public:
     // Constructor
     Value(T data, std::string label = "", std::string op = "",
@@ -44,13 +44,14 @@ public:
     // Value relu();
 
     void backprop();
-    void get_prev() const;
+    void print_graph();
+
 protected:
     std::string m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
+protected:
     // Helper function to make a topological sort
     void topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_values);
-public:
     void m_backward(); // 1 step of backdrop
 };
 
@@ -94,16 +95,6 @@ template <typename T> Value<T> Value<T>::tanh() {
     T x = this->data;
     T t = (exp(2 * x) - 1) / (exp(2 * x) + 1);
     return Value(t, "", "tanh", {this, nullptr});
-}
-
-// Function to get the previous elements that make up this element
-template <typename T> void Value<T>::get_prev() const {
-    if (this->m_prev[1] != nullptr) {
-        std::cout << "{" << *(this->m_prev[0]) << "," << *(this->m_prev[1])
-                  << "}\n";
-    } else {
-        std::cout << "{" << *(this->m_prev[0]) << "}\n";
-    }
 }
 
 template <typename T>
@@ -156,5 +147,18 @@ void Value<T>::backprop() {
     // Call backward in topological order applying the chain rule automatically
     for (auto value : sorted_values){
         value->m_backward();
+    }
+}
+
+template <typename T>
+void Value<T>::print_graph() {
+    // Create a vector to hold the sorted values
+    std::vector<Value<T>*> sorted_values;
+
+    // Perform topological sort starting from the current node
+    topo_sort_helper(this, sorted_values);
+
+    for (auto value : sorted_values){
+        std::cout << *value << '\n';
     }
 }

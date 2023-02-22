@@ -1,7 +1,6 @@
 #include "../micrograd/engine.hpp"
 
 int main() {
-
     // Creating a single perception
 
     // Input x1, x2
@@ -30,17 +29,5 @@ int main() {
 
     // Grandina with respect to itself is 1
     o.backprop();
-
-    std::cout << o << "\n";
-    std::cout << n << "\n";
-    std::cout << b << "\n";
-    std::cout << x1w1_x2w2 << "\n";
-    std::cout << x1w1 << "\n";
-    std::cout << x2w2 << "\n";
-    std::cout << w2 << "\n";
-    std::cout << x2 << "\n";
-    std::cout << x1 << "\n";
-    std::cout << w1 << "\n";
-
-    return 0;
+    o.print_graph();
 }
