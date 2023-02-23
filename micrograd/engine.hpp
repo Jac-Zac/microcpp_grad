@@ -3,18 +3,16 @@
 //
 //  Created by Jacopo Zacchigna on 2023-02-19
 //  Copyright © 2023 Jacopo Zacchigna. All rights reserved.
-//
 
 #pragma once
 
 #include <array>
 #include <cmath>
 #include <iostream>
-#include <stack>
 #include <string>
-#include <type_traits>
-#include <unordered_set>
 #include <vector>
+#include <unordered_set>
+#include <stack>
 
 enum value_ops : unsigned char {
     SUM = '+',
@@ -30,9 +28,9 @@ enum value_ops : unsigned char {
 
 template <typename T> class Value {
 public:
-    T data;            // data of the value
-    T grad;            // gradient which by default is zero
-    std::string label; // label of the value
+    T data;                    // data of the value
+    T grad;                    // gradient which by default is zero
+    std::string label;         // label of the value
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
@@ -61,25 +59,26 @@ public:
     };
 
     // Other ops
-    Value inverse();
-    Value exp();
+    Value inverse_value();
+    Value exp_value();
     Value tanh();
     // Value relu();
 
-    void backword();
+    void backward();
     void print_graph();
 
 protected:
     char m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
+    std::vector<Value<T> *> m_sorted_values; // vector to store the sorted values
+    std::unordered_set<Value<T> *> m_visited; // keep track of the visited nodes
 protected:
     // Helper function to make a topological sort
-    void topo_sort_helper(Value<T> *v, std::vector<Value<T> *> &sorted_values);
-    void m_backward(); // 1 step of backdrop
+    void _topo_sort(Value<T> *v);
+    void _backward(); // 1 step of backdrop
 };
 
 // ==================== Implementation =====================
-
 
 template <typename T>
 Value<T>::Value(T data, std::string label, char op)
@@ -100,14 +99,14 @@ template <typename T> Value<T> Value<T>::operator+(T other) {
 }
 
 template <typename T> Value<T> Value<T>::operator-(Value<T> &other) {
-    Value<T> result = Value<T>(data + other.data, "", DIF);
+    Value<T> result = Value<T>(data - other.data, "", DIF);
     result.m_prev[0] = this;
     result.m_prev[1] = &other;
     return result;
 }
 
 template <typename T> Value<T> Value<T>::operator-(T other) {
-    Value<T> result = Value<T>(data + other, "", DIF);
+    Value<T> result = Value<T>(data - other, "", DIF);
     result.m_prev[0] = this;
     result.m_prev[1] = new Value<T>(other);
     return result;
@@ -160,11 +159,11 @@ template <typename T> Value<T> Value<T>::operator-() {
     return *this * (-1);
 }
 
-template <typename T> Value<T> Value<T>::inverse() {
+template <typename T> Value<T> Value<T>::inverse_value() {
     return *this ^ (-1);
 }
 
-template <typename T> Value<T> Value<T>::exp() {
+template <typename T> Value<T> Value<T>::exp_value() {
     Value<T> result = Value<T>(exp(data), "", EXP);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
@@ -180,7 +179,7 @@ template <typename T> Value<T> Value<T>::tanh() {
     return result;
 }
 
-template <typename T> void Value<T>::m_backward() {
+template <typename T> void Value<T>::_backward() {
     switch (this->m_op) {
     case SUM:
         // Should just move the gradient along to both of them
@@ -198,7 +197,7 @@ template <typename T> void Value<T>::m_backward() {
         break;
     case DIV:
         this->m_prev[0]->grad += (1/(this->m_prev[1]->data)) * this->grad;
-        this->m_prev[1]->grad += (this->m_prev[0]->data)/pow(this->m_prev[1]->data,2) * this->grad;
+        this->m_prev[1]->grad -= (this->m_prev[0]->data)/pow(this->m_prev[1]->data,2) * this->grad;
         break;
     case POW:
         this->m_prev[0]->grad +=
@@ -222,67 +221,42 @@ template <typename T> void Value<T>::m_backward() {
 }
 
 template <typename T>
-void Value<T>::topo_sort_helper(Value<T> *v,
-                                std::vector<Value<T> *> &sorted_values) {
-
-    // Create a set to keep track of the visited nodes
-    std::unordered_set<Value<T> *> visited;
-    // Create a stack to hold the nodes
-    std::stack<Value<T> *> stack;
-
-    // Push the current node to the stack
-    stack.push(v);
-
-    // Loop until the stack is empty
-    while (!stack.empty()) {
-        // Get the top node of the stack
-        Value<T> *current = stack.top();
-        stack.pop();
-
-        // If the current node has already been visited, continue to the next
-        // iteration
-        if (visited.count(current) > 0) {
-            continue;
-        }
-
-        // Mark the current node as visited and add it to the sorted values list
-        visited.insert(current);
-        sorted_values.emplace_back(current);
-
-        // Iterate over the previous nodes of the current node
-        for (auto *child : current->m_prev) {
-            // If the previous node is not null, push it to the stack
-            if (child != nullptr) {
-                stack.push(child);
-            }
+void Value<T>::_topo_sort(Value<T> *v) {
+    m_visited.insert(v);
+    for (auto* child : v->m_prev) {
+        if (m_visited.count(child) == 0 && child != nullptr) {
+            _topo_sort(child);
         }
     }
+    m_sorted_values.push_back(v);
 }
 
-template <typename T> void Value<T>::backword() {
-    // Create a vector to hold the sorted values
-    std::vector<Value<T> *> sorted_values;
+template <typename T> void Value<T>::backward() {
 
-    // Perform topological sort starting from the current node
-    topo_sort_helper(this, sorted_values);
+    // If empty do topo sort
+    if(m_sorted_values.empty()){
+        _topo_sort(this);
+        std::reverse(m_sorted_values.begin(), m_sorted_values.end());
+    }
+
 
     // Set the derivative of dx/dx to 1
     this->grad = 1.0;
 
     // Call backward in topological order applying the chain rule automatically
-    for (auto value : sorted_values) {
-        value->m_backward();
+    for (auto &value : m_sorted_values) {
+        value->_backward();
     }
 }
 
 template <typename T> void Value<T>::print_graph() {
-    // Create a vector to hold the sorted values
-    std::vector<Value<T> *> sorted_values;
+    // If empty do topo sort
+    if(m_sorted_values.empty()){
+        _topo_sort(this);
+        std::reverse(m_sorted_values.begin(), m_sorted_values.end());
+    }
 
-    // Perform topological sort starting from the current node
-    topo_sort_helper(this, sorted_values);
-
-    for (auto value : sorted_values) {
+    for (auto &value : m_sorted_values) {
         std::cout << *value << '\n';
     }
 }
