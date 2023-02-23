@@ -10,36 +10,42 @@
 
 #include <array>
 #include <cmath>
+#include <iostream>
 #include <stack>
 #include <string>
-#include <vector>
-#include <iostream>
 #include <type_traits>
 #include <unordered_set>
+#include <vector>
 
-enum value_ops : unsigned char
-{
-    SUM = '+', DIF = '-', MUL = '*', DIV = '/', POW = '^' , EXP = 'e', NEG = 'n', TANH = 't', RELU = 'r'
+enum value_ops : unsigned char {
+    SUM = '+',
+    DIF = '-',
+    MUL = '*',
+    DIV = '/',
+    POW = '^',
+    EXP = 'e',
+    NEG = 'n',
+    TANH = 't',
+    RELU = 'r'
 };
 
 template <typename T> class Value {
 public:
-    T data;             // data of the value
-    T grad;             // gradient which by default is zero
-    std::string label;  // label of the value
+    T data;            // data of the value
+    T grad;            // gradient which by default is zero
+    std::string label; // label of the value
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
-    ~Value();
 
     // Operator Overloading
-    // rvalues version
+    // lvalues version
     Value operator+(Value &other);
     Value operator*(Value &other);
     Value operator-(Value &other);
     Value operator/(Value &other);
     Value operator^(Value &other);
-    // lvalues version
+    // rvalues version
     Value operator+(T other);
     Value operator*(T other);
     Value operator-(T other);
@@ -57,93 +63,78 @@ public:
     Value neg_value();
     Value exp_value();
     Value tanh();
-
     // Value relu();
 
     void backword();
     void print_graph();
 
-public:
+protected:
     char m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
 protected:
     // Helper function to make a topological sort
-    void topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_values);
+    void topo_sort_helper(Value<T> *v, std::vector<Value<T> *> &sorted_values);
     void m_backward(); // 1 step of backdrop
 };
 
 // ==================== Implementation =====================
 
+
 template <typename T>
 Value<T>::Value(T data, std::string label, char op)
-    : data(data), label(label), m_op(op), grad(0), m_prev({nullptr,nullptr}) {}
+    : data(data), label(label), m_op(op), grad(0), m_prev({nullptr, nullptr}) {}
 
-template<typename T>
-Value<T>::~Value() {
-    if (m_prev[1] != nullptr) {
-        delete m_prev[1];
-    }
-}
-
-template <typename T>
-Value<T> Value<T>::operator+(Value<T> &other) {
+template <typename T> Value<T> Value<T>::operator+(Value<T> &other) {
     Value<T> result = Value<T>(data + other.data, "", SUM);
     result.m_prev[0] = this;
     result.m_prev[1] = &other;
     return result;
 }
 
-template <typename T>
-Value<T> Value<T>::operator+(T other){
+template <typename T> Value<T> Value<T>::operator+(T other) {
     Value<T> result = Value<T>(data + other, "", SUM);
     result.m_prev[0] = this;
     result.m_prev[1] = new Value<T>(other);
     return result;
 }
 
-template <typename T>
-Value<T> Value<T>::operator-(T other){
+template <typename T> Value<T> Value<T>::operator-(T other) {
     Value<T> result = Value<T>(data - other, "", DIF);
     result.m_prev[0] = this;
     result.m_prev[1] = new Value<T>(other);
     return result;
 }
 
-template <typename T>
-Value<T> Value<T>::operator*(Value<T> &other){
+template <typename T> Value<T> Value<T>::operator*(Value<T> &other) {
     Value<T> result = Value<T>(data * other.data, "", MUL);
     result.m_prev[0] = this;
     result.m_prev[1] = &other;
     return result;
 }
 
-template <typename T>
-Value<T> Value<T>::operator*(T other){
+template <typename T> Value<T> Value<T>::operator*(T other) {
     Value<T> result = Value<T>(data * other, "", MUL);
     result.m_prev[0] = this;
     result.m_prev[1] = new Value<T>(other);
     return result;
 }
 
-template <typename T>
-Value<T> Value<T>::operator/(Value<T> &other){
+template <typename T> Value<T> Value<T>::operator/(Value<T> &other) {
     Value<T> result = Value<T>(data / other.data, "", DIV);
     result.m_prev[0] = this;
     result.m_prev[1] = &other;
     return result;
 }
 
-template <typename T>
-Value<T> Value<T>::operator/(T other){
+template <typename T> Value<T> Value<T>::operator/(T other) {
     Value<T> result = Value<T>(data / other, "", DIV);
     result.m_prev[0] = this;
     result.m_prev[1] = new Value<T>(other);
     return result;
 }
 
-template <typename T>
-Value<T> Value<T>::operator^(Value<T> &other){
-    Value<T> result = Value<T>(pow(data,other.data), "", POW);
+template <typename T> Value<T> Value<T>::operator^(Value<T> &other) {
+    Value<T> result = Value<T>(pow(data, other.data), "", POW);
     result.m_prev[0] = this;
     result.m_prev[1] = &other;
     return result;
@@ -152,71 +143,76 @@ Value<T> Value<T>::operator^(Value<T> &other){
 template <typename T> Value<T> Value<T>::neg_value() {
     Value<T> result = *this * (-1);
     result.label = NEG;
-    std::cout<< result;
+    std::cout << result;
     return result;
 }
 
 template <typename T> Value<T> Value<T>::exp_value() {
-    Value<T> result = Value<T>(exp(data),"",EXP);
+    Value<T> result = Value<T>(exp(data), "", EXP);
     result.m_prev[0] = this;
+    result.m_prev[1] = nullptr;
     return result;
 }
 
 template <typename T> Value<T> Value<T>::tanh() {
     T x = this->data;
     T tanh = (exp(2 * x) - 1) / (exp(2 * x) + 1);
-    Value<T> result = Value<T>(tanh , "", TANH);
+    Value<T> result = Value<T>(tanh, "", TANH);
     result.m_prev[0] = this;
+    result.m_prev[1] = nullptr;
     return result;
 }
 
-template <typename T>
-void Value<T>::m_backward(){
-    switch(this->m_op){
-        case SUM:
-            // Should just move the gradient along to both of them
-            // += because we want to avoid bugs if we reuse a variable
-            this->m_prev[0]->grad += 1.0 * this->grad;
-            this->m_prev[1]->grad += 1.0 * this->grad;
-            break;
-        case DIF:
-            this->m_prev[0]->grad += 1.0 * this->grad;
-            this->m_prev[1]->grad -= 1.0 * this->grad;
-            break;
-        case MUL:
-            this->m_prev[0]->grad += this->m_prev[1]->data * this->grad;
-            this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
-            break;
-        case DIV:
-            // think about it
-            // this->m_prev[0]->grad += (this->m_prev[1]->data)/(this->grad;
-            // this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
-            break;
-        case POW:
-            this->m_prev[0]->grad += (this->m_prev[1]->data * pow(this->m_prev[0]->data,(this->m_prev[1]->data - 1))) * this->grad;
-            break;
-        case EXP:
-            // e^x is e^x which I already saved in this->data
-            this->m_prev[0]->grad += this->data * this->grad;
-            break;
-        case TANH:
-            this->m_prev[0]->grad += (1 - pow(this->data, 2)) * this->grad;
-            break;
-        case RELU:
-            // this->m_prev[0]->grad += (1 - pow(this->data, 2)) * this->grad;
-            break;
-        default:
-            break;
+template <typename T> void Value<T>::m_backward() {
+    switch (this->m_op) {
+    case SUM:
+        // Should just move the gradient along to both of them
+        // += because we want to avoid bugs if we reuse a variable
+        this->m_prev[0]->grad += 1.0 * this->grad;
+        this->m_prev[1]->grad += 1.0 * this->grad;
+        break;
+    case DIF:
+        this->m_prev[0]->grad += 1.0 * this->grad;
+        this->m_prev[1]->grad -= 1.0 * this->grad;
+        break;
+    case MUL:
+        this->m_prev[0]->grad += this->m_prev[1]->data * this->grad;
+        this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
+        break;
+    case DIV:
+        // think about it
+        // this->m_prev[0]->grad += (this->m_prev[1]->data)/(this->grad;
+        // this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
+        break;
+    case POW:
+        this->m_prev[0]->grad +=
+            (this->m_prev[1]->data *
+             pow(this->m_prev[0]->data, (this->m_prev[1]->data - 1))) *
+            this->grad;
+        break;
+    case EXP:
+        // e^x is e^x which I already saved in this->data
+        this->m_prev[0]->grad += this->data * this->grad;
+        break;
+    case TANH:
+        this->m_prev[0]->grad += (1 - pow(this->data, 2)) * this->grad;
+        break;
+    case RELU:
+        // this->m_prev[0]->grad += (1 - pow(this->data, 2)) * this->grad;
+        break;
+    default:
+        break;
     }
 }
 
 template <typename T>
-void Value<T>::topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_values) {
+void Value<T>::topo_sort_helper(Value<T> *v,
+                                std::vector<Value<T> *> &sorted_values) {
 
     // Create a set to keep track of the visited nodes
-    std::unordered_set<Value<T>*> visited;
+    std::unordered_set<Value<T> *> visited;
     // Create a stack to hold the nodes
-    std::stack<Value<T>*> stack;
+    std::stack<Value<T> *> stack;
 
     // Push the current node to the stack
     stack.push(v);
@@ -224,10 +220,11 @@ void Value<T>::topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_valu
     // Loop until the stack is empty
     while (!stack.empty()) {
         // Get the top node of the stack
-        Value<T>* current = stack.top();
+        Value<T> *current = stack.top();
         stack.pop();
 
-        // If the current node has already been visited, continue to the next iteration
+        // If the current node has already been visited, continue to the next
+        // iteration
         if (visited.count(current) > 0) {
             continue;
         }
@@ -237,7 +234,7 @@ void Value<T>::topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_valu
         sorted_values.emplace_back(current);
 
         // Iterate over the previous nodes of the current node
-        for (Value<T>* child : current->m_prev) {
+        for (auto *child : current->m_prev) {
             // If the previous node is not null, push it to the stack
             if (child != nullptr) {
                 stack.push(child);
@@ -246,10 +243,9 @@ void Value<T>::topo_sort_helper(Value<T>* v, std::vector<Value<T>*>& sorted_valu
     }
 }
 
-template <typename T>
-void Value<T>::backword() {
+template <typename T> void Value<T>::backword() {
     // Create a vector to hold the sorted values
-    std::vector<Value<T>*> sorted_values;
+    std::vector<Value<T> *> sorted_values;
 
     // Perform topological sort starting from the current node
     topo_sort_helper(this, sorted_values);
@@ -258,20 +254,19 @@ void Value<T>::backword() {
     this->grad = 1.0;
 
     // Call backward in topological order applying the chain rule automatically
-    for (auto value : sorted_values){
+    for (auto value : sorted_values) {
         value->m_backward();
     }
 }
 
-template <typename T>
-void Value<T>::print_graph() {
+template <typename T> void Value<T>::print_graph() {
     // Create a vector to hold the sorted values
-    std::vector<Value<T>*> sorted_values;
+    std::vector<Value<T> *> sorted_values;
 
     // Perform topological sort starting from the current node
     topo_sort_helper(this, sorted_values);
 
-    for (auto value : sorted_values){
+    for (auto value : sorted_values) {
         std::cout << *value << '\n';
     }
 }

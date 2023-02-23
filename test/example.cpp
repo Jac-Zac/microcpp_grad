@@ -24,7 +24,8 @@ int main() {
     // new neuron
     auto n = x1w1_x2w2 + b;
     n.label = "n";
-    auto o = n.tanh();
+//     auto o = n.tanh();
+    auto o = (n*2).exp_value();
     o.label = "o";
 
     // Grandina with respect to itself is 1
