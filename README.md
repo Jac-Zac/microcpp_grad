@@ -50,5 +50,5 @@ int main() {
 
 
 ### TODO
-I wrote an alternative way, I'd like to not use raw pointers though.
-Also I want to make the other ops work
+
+Think of a better way to write the autograd engine. And also stack based topo_sort
