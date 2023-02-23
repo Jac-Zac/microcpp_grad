@@ -9,10 +9,10 @@
 #include <array>
 #include <cmath>
 #include <iostream>
-#include <string>
-#include <vector>
-#include <unordered_set>
 #include <stack>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 enum value_ops : unsigned char {
     SUM = '+',
@@ -28,9 +28,9 @@ enum value_ops : unsigned char {
 
 template <typename T> class Value {
 public:
-    T data;                    // data of the value
-    T grad;                    // gradient which by default is zero
-    std::string label;         // label of the value
+    T data;            // data of the value
+    T grad;            // gradient which by default is zero
+    std::string label; // label of the value
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
@@ -70,7 +70,8 @@ public:
 protected:
     char m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
-    std::vector<Value<T> *> m_sorted_values; // vector to store the sorted values
+    std::vector<Value<T> *>
+        m_sorted_values; // vector to store the sorted values
     std::unordered_set<Value<T> *> m_visited; // keep track of the visited nodes
 protected:
     // Helper function to make a topological sort
@@ -126,7 +127,6 @@ template <typename T> Value<T> Value<T>::operator*(T other) {
     return result;
 }
 
-
 template <typename T> Value<T> Value<T>::operator^(Value<T> &other) {
     Value<T> result = Value<T>(pow(data, other.data), "", POW);
     result.m_prev[0] = this;
@@ -151,13 +151,11 @@ template <typename T> Value<T> Value<T>::operator/(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator/(T other) {
     Value<T> result = Value<T>(data / data, "", DIV);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T> (other);
+    result.m_prev[1] = new Value<T>(other);
     return result;
 }
 
-template <typename T> Value<T> Value<T>::operator-() {
-    return *this * (-1);
-}
+template <typename T> Value<T> Value<T>::operator-() { return *this * (-1); }
 
 template <typename T> Value<T> Value<T>::inverse_value() {
     return *this ^ (-1);
@@ -196,8 +194,9 @@ template <typename T> void Value<T>::_backward() {
         this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
         break;
     case DIV:
-        this->m_prev[0]->grad += (1/(this->m_prev[1]->data)) * this->grad;
-        this->m_prev[1]->grad -= (this->m_prev[0]->data)/pow(this->m_prev[1]->data,2) * this->grad;
+        this->m_prev[0]->grad += (1 / (this->m_prev[1]->data)) * this->grad;
+        this->m_prev[1]->grad -= (this->m_prev[0]->data) /
+                                 pow(this->m_prev[1]->data, 2) * this->grad;
         break;
     case POW:
         this->m_prev[0]->grad +=
@@ -220,11 +219,14 @@ template <typename T> void Value<T>::_backward() {
     }
 }
 
-template <typename T>
-void Value<T>::_topo_sort(Value<T> *v) {
+template <typename T> void Value<T>::_topo_sort(Value<T> *v) {
+    // Add it to the visited values
     m_visited.insert(v);
-    for (auto* child : v->m_prev) {
+    // Iterate trough the children
+    for (auto *child : v->m_prev) {
+        // If not visited and not a leaf value
         if (m_visited.count(child) == 0 && child != nullptr) {
+            // Call the function recursively
             _topo_sort(child);
         }
     }
@@ -234,11 +236,10 @@ void Value<T>::_topo_sort(Value<T> *v) {
 template <typename T> void Value<T>::backward() {
 
     // If empty do topo sort
-    if(m_sorted_values.empty()){
+    if (m_sorted_values.empty()) {
         _topo_sort(this);
         std::reverse(m_sorted_values.begin(), m_sorted_values.end());
     }
-
 
     // Set the derivative of dx/dx to 1
     this->grad = 1.0;
@@ -251,7 +252,7 @@ template <typename T> void Value<T>::backward() {
 
 template <typename T> void Value<T>::print_graph() {
     // If empty do topo sort
-    if(m_sorted_values.empty()){
+    if (m_sorted_values.empty()) {
         _topo_sort(this);
         std::reverse(m_sorted_values.begin(), m_sorted_values.end());
     }

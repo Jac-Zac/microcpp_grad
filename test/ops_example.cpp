@@ -25,35 +25,17 @@ int main() {
     auto n = x1w1_x2w2 + b;
     n.label = "n";
 
-    // auto o = n.tanh();
+    //    auto o = n.tanh();
 
-    auto n2 = n*2;
-    n2.label = "2*n";
-    auto e = (n2).exp_value();
+    // Custom tanh implementation
+    // auto n2 = n*2;
+    auto e = (n * 2).exp_value();
     e.label = "e";
-
     auto mid1 = (e - 1);
-    mid1.label = "mid1";
     auto mid2 = (e + 1);
-    mid2.label = "mid2";
-    auto o = mid1/mid2;
+    auto o = mid1 / mid2;
 
     o.label = "o";
-
-    /* o.grad = 1.0 */
-    /* o.m_backward(); */
-    /* mid1.m_backward(); */
-    /* mid2.m_backward(); */
-    /* e.m_backward(); */
-    /* n2.m_backward(); */
-    /* n.m_backward(); */
-    /* x1w1_x2w2.m_backward(); */
-    /* x1w1.m_backward(); */
-    /* x2w2.m_backward(); */
-    /* x1.m_backward(); */
-    /* x2.m_backward(); */
-    /* w1.m_backward(); */
-    /* w2.m_backward(); */
 
     // Grandina with respect to itself is 1
     o.backward();

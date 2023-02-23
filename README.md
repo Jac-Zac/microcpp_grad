@@ -13,7 +13,7 @@ cmake -Boutput && cd output && make && ./test_executable
 ### Single perception example;
 > Example of a perception to show different ops
 ```cpp
-#include "../micrograd/engine.hpp"
+```#include "../micrograd/engine.hpp"
 
 int main() {
     // Creating a single perception
@@ -39,14 +39,15 @@ int main() {
     // new neuron
     auto n = x1w1_x2w2 + b;
     n.label = "n";
+
     auto o = n.tanh();
     o.label = "o";
 
     // Grandina with respect to itself is 1
-    o.backword();
+    o.backward();
     o.print_graph();
 }
-```
+
 
 ### TODO
 I wrote an alternative way, I'd like to not use raw pointers though.
