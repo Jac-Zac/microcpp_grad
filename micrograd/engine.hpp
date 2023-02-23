@@ -1,4 +1,3 @@
-//
 //  engine.hpp
 //  Micrograd_C++
 //
@@ -51,6 +50,8 @@ public:
     Value operator-(T other);
     Value operator/(T other);
     Value operator^(T other);
+    // Unari minus operator
+    Value operator-();
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -60,8 +61,8 @@ public:
     };
 
     // Other ops
-    Value neg_value();
-    Value exp_value();
+    Value inverse();
+    Value exp();
     Value tanh();
     // Value relu();
 
@@ -98,8 +99,15 @@ template <typename T> Value<T> Value<T>::operator+(T other) {
     return result;
 }
 
+template <typename T> Value<T> Value<T>::operator-(Value<T> &other) {
+    Value<T> result = Value<T>(data + other.data, "", DIF);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
 template <typename T> Value<T> Value<T>::operator-(T other) {
-    Value<T> result = Value<T>(data - other, "", DIF);
+    Value<T> result = Value<T>(data + other, "", DIF);
     result.m_prev[0] = this;
     result.m_prev[1] = new Value<T>(other);
     return result;
@@ -119,19 +127,6 @@ template <typename T> Value<T> Value<T>::operator*(T other) {
     return result;
 }
 
-template <typename T> Value<T> Value<T>::operator/(Value<T> &other) {
-    Value<T> result = Value<T>(data / other.data, "", DIV);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator/(T other) {
-    Value<T> result = Value<T>(data / other, "", DIV);
-    result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other);
-    return result;
-}
 
 template <typename T> Value<T> Value<T>::operator^(Value<T> &other) {
     Value<T> result = Value<T>(pow(data, other.data), "", POW);
@@ -140,14 +135,36 @@ template <typename T> Value<T> Value<T>::operator^(Value<T> &other) {
     return result;
 }
 
-template <typename T> Value<T> Value<T>::neg_value() {
-    Value<T> result = *this * (-1);
-    result.label = NEG;
-    std::cout << result;
+template <typename T> Value<T> Value<T>::operator^(T other) {
+    Value<T> result = Value<T>(pow(data, other), "", POW);
+    result.m_prev[0] = this;
+    result.m_prev[1] = new Value<T>(other);
     return result;
 }
 
-template <typename T> Value<T> Value<T>::exp_value() {
+template <typename T> Value<T> Value<T>::operator/(Value<T> &other) {
+    Value<T> result = Value<T>(data / other.data, "", DIV);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::operator/(T other) {
+    Value<T> result = Value<T>(data / data, "", DIV);
+    result.m_prev[0] = this;
+    result.m_prev[1] = new Value<T> (other);
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::operator-() {
+    return *this * (-1);
+}
+
+template <typename T> Value<T> Value<T>::inverse() {
+    return *this ^ (-1);
+}
+
+template <typename T> Value<T> Value<T>::exp() {
     Value<T> result = Value<T>(exp(data), "", EXP);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
@@ -180,9 +197,8 @@ template <typename T> void Value<T>::m_backward() {
         this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
         break;
     case DIV:
-        // think about it
-        // this->m_prev[0]->grad += (this->m_prev[1]->data)/(this->grad;
-        // this->m_prev[1]->grad += this->m_prev[0]->data * this->grad;
+        this->m_prev[0]->grad += (1/(this->m_prev[1]->data)) * this->grad;
+        this->m_prev[1]->grad += (this->m_prev[0]->data)/pow(this->m_prev[1]->data,2) * this->grad;
         break;
     case POW:
         this->m_prev[0]->grad +=
