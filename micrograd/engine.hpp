@@ -77,6 +77,7 @@ protected:
     // Helper function to make a topological sort
     void _topo_sort(Value<T> *v);
     void _backward(); // 1 step of backdrop
+    void _draw_graph(const Value<T>* v)const;
 };
 
 // ==================== Implementation =====================
@@ -257,7 +258,33 @@ template <typename T> void Value<T>::print_graph() {
         std::reverse(m_sorted_values.begin(), m_sorted_values.end());
     }
 
+#define ASCII_DRAWING 1
+#if ASCII_DRAWING == 1
+    std::cout << *this << '\n';
+    _draw_graph(this);
+    std::cout << std::string(9, ' ') << "|" << std::string(10, ' ') << '\n';
+#else
     for (auto &value : m_sorted_values) {
         std::cout << *value << '\n';
+    }
+#endif
+}
+
+template<typename T>
+void Value<T>::_draw_graph(const Value<T>* v)const {
+    //
+    for(size_t j = 0; j < v->m_prev.size(); j++){
+        if (v->m_prev[j] != nullptr){
+            std::cout << *(v->m_prev[j]) << std::string(5, ' ') << v->m_prev[j]->m_op;
+        }
+    }
+
+    std::cout << std::string(9, ' ') << "|" << std::string(10, ' ') << '\n';
+    std::cout << std::string(21, '-') << '\n';
+
+    for(size_t j = 0; j < v->m_prev.size(); j++){
+        if (v->m_prev[j] != nullptr){
+            _draw_graph(v->m_prev[j]);
+        }
     }
 }

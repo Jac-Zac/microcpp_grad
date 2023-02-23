@@ -1,6 +1,6 @@
 #include "../micrograd/engine.hpp"
 
-void single_perceptron() {
+int main() {
     // Creating a single perception
 
     // Input x1, x2
@@ -25,14 +25,7 @@ void single_perceptron() {
     auto n = x1w1_x2w2 + b;
     n.label = "n";
 
-    // auto o = n.tanh();
-
-    // Custom tanh implementation
-    auto e = (n * 2).exp_value();
-    e.label = "e";
-    auto mid1 = (e - 1);
-    auto mid2 = (e + 1);
-    auto o = mid1 / mid2;
+    auto o = n.tanh();
 
     o.label = "o";
 
