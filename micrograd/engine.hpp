@@ -96,7 +96,7 @@ template <typename T> Value<T> Value<T>::operator+(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator+(T other) {
     Value<T> result = Value<T>(data + other, "", SUM);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other);
+    result.m_prev[1] = new Value<T>(other, "leaf", SUM);
     return result;
 }
 
@@ -110,7 +110,7 @@ template <typename T> Value<T> Value<T>::operator-(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator-(T other) {
     Value<T> result = Value<T>(data - other, "", DIF);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other);
+    result.m_prev[1] = new Value<T>(other, "leaf", SUM);
     return result;
 }
 
@@ -124,21 +124,7 @@ template <typename T> Value<T> Value<T>::operator*(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator*(T other) {
     Value<T> result = Value<T>(data * other, "", MUL);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other);
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator^(Value<T> &other) {
-    Value<T> result = Value<T>(pow(data, other.data), "", POW);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator^(T other) {
-    Value<T> result = Value<T>(pow(data, other), "", POW);
-    result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other);
+    result.m_prev[1] = new Value<T>(other, "leaf", MUL);
     return result;
 }
 
@@ -152,7 +138,21 @@ template <typename T> Value<T> Value<T>::operator/(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator/(T other) {
     Value<T> result = Value<T>(data / data, "", DIV);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other);
+    result.m_prev[1] = new Value<T>(other, "leaf", DIV);
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::operator^(Value<T> &other) {
+    Value<T> result = Value<T>(pow(data, other.data), "", POW);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::operator^(T other) {
+    Value<T> result = Value<T>(pow(data, other), "", POW);
+    result.m_prev[0] = this;
+    result.m_prev[1] = new Value<T>(other, "leaf", POW);
     return result;
 }
 
@@ -260,31 +260,17 @@ template <typename T> void Value<T>::print_graph() {
 
 #define ASCII_DRAWING 1
 #if ASCII_DRAWING == 1
-    std::cout << *this << '\n';
-    _draw_graph(this);
-    std::cout << std::string(9, ' ') << "|" << std::string(10, ' ') << '\n';
+    for (auto &value : m_sorted_values){
+        std::cout << *value;
+        if (value->m_op != ' '){
+            std::cout << '\n' << std::string(20, ' ') << "|" << '\n' << std::string(20, ' ') << value->m_op << std::string(10, ' ') << '\n' << std::string(20, ' ') << "|" << '\n';
+        }else{
+            std::cout << '\n';
+        }
+    }
 #else
     for (auto &value : m_sorted_values) {
         std::cout << *value << '\n';
     }
 #endif
-}
-
-template<typename T>
-void Value<T>::_draw_graph(const Value<T>* v)const {
-    //
-    for(size_t j = 0; j < v->m_prev.size(); j++){
-        if (v->m_prev[j] != nullptr){
-            std::cout << *(v->m_prev[j]) << std::string(5, ' ') << v->m_prev[j]->m_op;
-        }
-    }
-
-    std::cout << std::string(9, ' ') << "|" << std::string(10, ' ') << '\n';
-    std::cout << std::string(21, '-') << '\n';
-
-    for(size_t j = 0; j < v->m_prev.size(); j++){
-        if (v->m_prev[j] != nullptr){
-            _draw_graph(v->m_prev[j]);
-        }
-    }
 }
