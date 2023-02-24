@@ -51,4 +51,5 @@ int main() {
 
 ### TODO
 
-Think of a better way to write the autograd engine. And also stack based topo_sort
+- Think of a better way to write the autograd engine. And also stack based topo_sort
+- Draw graph with graphiz
