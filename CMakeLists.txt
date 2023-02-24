@@ -9,7 +9,7 @@ file(GLOB_RECURSE SOURCES
       micrograd/*.cpp
       micrograd/**/*.cpp
       test/**.cpp
-      test/**/*.cpp
+      # examples/**.cpp
 )
 file(GLOB_RECURSE HEADERS
       micrograd/*hpp

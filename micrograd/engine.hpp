@@ -259,11 +259,15 @@ template <typename T> void Value<T>::print_graph() {
 
 #define ASCII_DRAWING 1
 #if ASCII_DRAWING == 1
-    for (auto &value : m_sorted_values){
+    for (auto &value : m_sorted_values) {
         std::cout << *value;
-        if (value->m_op != ' '){
-            std::cout << '\n' << std::string(20, ' ') << "|" << '\n' << std::string(20, ' ') << value->m_op << std::string(10, ' ') << '\n' << std::string(20, ' ') << "|" << '\n';
-        }else{
+        if (value->m_op != ' ') {
+            std::cout << '\n'
+                      << std::string(20, ' ') << "|" << '\n'
+                      << std::string(20, ' ') << value->m_op
+                      << std::string(10, ' ') << '\n'
+                      << std::string(20, ' ') << "|" << '\n';
+        } else {
             std::cout << '\n';
         }
     }

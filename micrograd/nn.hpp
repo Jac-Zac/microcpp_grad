@@ -18,9 +18,7 @@ public:
     Neuron();
     // Operator
 
-    double operator()(std::array<double,N> x){
-        return 0.0;
-    }
+    double operator()(std::array<double, N> x) { return 0.0; }
 
     void print_graph();
 };
