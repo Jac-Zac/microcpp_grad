@@ -77,7 +77,6 @@ protected:
     // Helper function to make a topological sort
     void _topo_sort(Value<T> *v);
     void _backward(); // 1 step of backdrop
-    void _draw_graph(const Value<T>* v)const;
 };
 
 // ==================== Implementation =====================
@@ -96,7 +95,7 @@ template <typename T> Value<T> Value<T>::operator+(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator+(T other) {
     Value<T> result = Value<T>(data + other, "", SUM);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf", SUM);
+    result.m_prev[1] = new Value<T>(other, "leaf");
     return result;
 }
 
@@ -110,7 +109,7 @@ template <typename T> Value<T> Value<T>::operator-(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator-(T other) {
     Value<T> result = Value<T>(data - other, "", DIF);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf", SUM);
+    result.m_prev[1] = new Value<T>(other, "leaf");
     return result;
 }
 
@@ -124,21 +123,7 @@ template <typename T> Value<T> Value<T>::operator*(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator*(T other) {
     Value<T> result = Value<T>(data * other, "", MUL);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf", MUL);
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator/(Value<T> &other) {
-    Value<T> result = Value<T>(data / other.data, "", DIV);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator/(T other) {
-    Value<T> result = Value<T>(data / data, "", DIV);
-    result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf", DIV);
+    result.m_prev[1] = new Value<T>(other, "leaf");
     return result;
 }
 
@@ -152,7 +137,21 @@ template <typename T> Value<T> Value<T>::operator^(Value<T> &other) {
 template <typename T> Value<T> Value<T>::operator^(T other) {
     Value<T> result = Value<T>(pow(data, other), "", POW);
     result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf", POW);
+    result.m_prev[1] = new Value<T>(other, "leaf");
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::operator/(Value<T> &other) {
+    Value<T> result = Value<T>(data / other.data, "", DIV);
+    result.m_prev[0] = this;
+    result.m_prev[1] = &other;
+    return result;
+}
+
+template <typename T> Value<T> Value<T>::operator/(T other) {
+    Value<T> result = Value<T>(data / data, "", DIV);
+    result.m_prev[0] = this;
+    result.m_prev[1] = new Value<T>(other, "leaf");
     return result;
 }
 
