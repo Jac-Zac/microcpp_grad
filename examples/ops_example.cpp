@@ -40,5 +40,5 @@ int main() {
 
     // Grandina with respect to itself is 1
     o.backward();
-    o.print_graph();
+    o.draw_graph();
 }

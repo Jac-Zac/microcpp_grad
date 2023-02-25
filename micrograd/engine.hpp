@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <stack>
 #include <string>
@@ -32,6 +33,7 @@ public:
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
+    ~Value();
 
     // Operator Overloading
     // lvalues version
@@ -60,18 +62,18 @@ public:
     Value inverse_value();
     Value exp_value();
     Value tanh();
-    // Value relu();
+    Value relu();
 
     void backward();
-    void print_graph();
+    void draw_graph();
 
 protected:
-    T data;                                   // data of the value
+    T data; // data of the value
     char m_op;
-    T m_grad;                                 // gradient which by default is zero
-    std::array<Value<T> *, 2> m_prev;         // previous values
+    T m_grad;                         // gradient which by default is zero
+    std::array<Value<T> *, 2> m_prev; // previous values
     std::vector<Value<T> *>
-    m_sorted_values;                          // vector to store the sorted values
+        m_sorted_values; // vector to store the sorted values
     std::unordered_set<Value<T> *> m_visited; // keep track of the visited nodes
 protected:
     // Helper function to make a topological sort
@@ -83,7 +85,13 @@ protected:
 
 template <typename T>
 Value<T>::Value(T data, std::string label, char op)
-    : data(data), label(label), m_op(op), m_grad(0), m_prev({nullptr, nullptr}) {}
+    : data(data), label(label), m_op(op), m_grad(0),
+      m_prev({nullptr, nullptr}) {}
+
+template <typename T>
+Value<T>::~Value(){
+
+}
 
 template <typename T> Value<T> Value<T>::operator+(Value<T> &other) {
     Value<T> result = Value<T>(data + other.data, "", SUM);
@@ -177,6 +185,14 @@ template <typename T> Value<T> Value<T>::tanh() {
     return result;
 }
 
+template <typename T> Value<T> Value<T>::relu() {
+    T relu = this->data < 0 ? 0 : this->data;
+    Value<T> result = Value<T>(relu, "", RELU);
+    result.m_prev[0] = this;
+    result.m_prev[1] = nullptr;
+    return result;
+}
+
 template <typename T> void Value<T>::_backward() {
     switch (this->m_op) {
     case SUM:
@@ -196,7 +212,7 @@ template <typename T> void Value<T>::_backward() {
     case DIV:
         this->m_prev[0]->m_grad += (1 / (this->m_prev[1]->data)) * this->m_grad;
         this->m_prev[1]->m_grad -= (this->m_prev[0]->data) /
-                                 pow(this->m_prev[1]->data, 2) * this->m_grad;
+                                   pow(this->m_prev[1]->data, 2) * this->m_grad;
         break;
     case POW:
         this->m_prev[0]->m_grad +=
@@ -212,7 +228,7 @@ template <typename T> void Value<T>::_backward() {
         this->m_prev[0]->m_grad += (1 - pow(this->data, 2)) * this->m_grad;
         break;
     case RELU:
-        // this->m_prev[0]->m_grad += (1 - pow(this->data, 2)) * this->m_grad;
+        this->m_prev[0]->m_grad += this->data > 0 ? this->data : 0;
         break;
     default:
         break;
@@ -250,27 +266,49 @@ template <typename T> void Value<T>::backward() {
     }
 }
 
-template <typename T>
-void Value<T>::print_graph(){
-    // Perform a topological sort of the graph
+template <typename T> void Value<T>::draw_graph() {
+    // Perform a topological sort of the graph in reverse
     if (m_sorted_values.empty()) {
         _topo_sort(this);
-        std::reverse(m_sorted_values.begin(), m_sorted_values.end());
     }
 
-    // Print out the graph
-    std::cout << "digraph G {\n";
+    // Open a file to write the output
+    std::ofstream outfile("graph.dot");
+    if (!outfile) {
+        std::cerr << "Error: failed to open graph.dot\n";
+        return;
+    }
+
+    // Create a graphviz graph
+    outfile << "digraph G {\n";
+    outfile << "  rankdir=LR; // set rankdir attribute to LR\n";
     for (const auto &values : m_sorted_values) {
-        std::cout << "  " << values->label << " [label=\"" << values->label << " | " << values->data << " | " << values->m_grad << "\", shape=record]\n";
-        for (const auto &prev_value : values->m_prev) {
-            if (prev_value != nullptr) {
-                std::cout << "  " << *prev_value << " -> " << *values << "\n";
-            }
+        outfile << "  " << uintptr_t(values)
+                << " [label=\"label = " << values->label
+                << " | data = " << values->data
+                << " | grad = " << values->m_grad << "\", shape=record]\n";
+        if (values->m_op != ' ') {
+            // if this value is a result of some operation, create an op node
+            // for it
+            outfile << "  " << uintptr_t(values) + values->m_op << " [label=\""
+                    << values->m_op << "\"]\n";
+            outfile << "  " << uintptr_t(values) + values->m_op << " -> "
+                    << uintptr_t(values) << "\n";
         }
+        for (size_t j = 0; j < 2; j++)
+            if (values->m_prev[j] != nullptr) {
+                // if this value is a result of some operation, create an op
+                // node for it
+                outfile << "  " << uintptr_t(values->m_prev[j]) << " -> "
+                        << uintptr_t(values) + values->m_op << "\n";
+            }
     }
-    std::cout << "}\n";
 
-    for (const auto &values : m_sorted_values){
-        std::cout << *values << '\n';
-    }
+    outfile << "}\n";
+    outfile.close();
+
+    // Create the graph using the dot command
+    std::system("dot -Tpng graph.dot -o graph.png");
+    // Open the graph using the default viewer
+    std::system("open graph.png");
 }

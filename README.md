@@ -13,7 +13,7 @@ cmake -Boutput && cd output && make && ./test_executable
 ### Single perception example;
 > Example of a perception to show different ops
 ```cpp
-```#include "../micrograd/engine.hpp"
+#include "../micrograd/engine.hpp"
 
 int main() {
     // Creating a single perception
@@ -40,16 +40,27 @@ int main() {
     auto n = x1w1_x2w2 + b;
     n.label = "n";
 
-    auto o = n.tanh();
+    // auto o = n.tanh();
+
+    // Custom tanh implementation
+    auto e = (n * 2).exp_value();
+    e.label = "e";
+    auto mid1 = (e - 1);
+    mid1.label = "mid1";
+    auto mid2 = (e + 1);
+    mid2.label = "mid2";
+    auto o = mid1 / mid2;
+
     o.label = "o";
 
     // Grandina with respect to itself is 1
     o.backward();
-    o.print_graph();
+    o.draw_graph();
 }
-
+```
 
 ### TODO
 
+- Start neural network
+
 - Think of a better way to write the autograd engine. And also stack based topo_sort
-- Draw graph with graphiz
