@@ -85,7 +85,7 @@ protected:
 
 template <typename T>
 Value<T>::Value(T data, std::string label, char op)
-    : data(data), label(label), m_op(op), m_grad(0),
+    : data(data), label(label), m_op(op), m_grad(0.0),
       m_prev({nullptr, nullptr}) {}
 
 template <typename T>
@@ -254,15 +254,14 @@ template <typename T> void Value<T>::backward() {
     // If empty do topo sort
     if (m_sorted_values.empty()) {
         _topo_sort(this);
-        std::reverse(m_sorted_values.begin(), m_sorted_values.end());
     }
 
     // Set the derivative of dx/dx to 1
     this->m_grad = 1.0;
 
     // Call backward in topological order applying the chain rule automatically
-    for (auto &value : m_sorted_values) {
-        value->_backward();
+    for (auto it = m_sorted_values.rbegin(); it != m_sorted_values.rend(); ++it) {
+        (*it)->_backward();
     }
 }
 
