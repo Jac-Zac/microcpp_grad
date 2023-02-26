@@ -30,8 +30,8 @@ enum value_ops : char {
 template <typename T> class Value {
 public:
     std::string label; // label of the value
-    T data; // data of the value
-    T grad; // gradient which by default is zero
+    T data;            // data of the value
+    T grad;            // gradient which by default is zero
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
@@ -89,27 +89,23 @@ Value<T>::Value(T data, std::string label, char op)
     : data(data), label(label), m_op(op), grad(0.0),
       m_prev({nullptr, nullptr}) {}
 
-template <typename T>
-Value<T> &Value<T>::operator+=(const Value<T> &other){
+template <typename T> Value<T> &Value<T>::operator+=(const Value<T> &other) {
     // update the data
     data += other.data;
     return *this;
 }
 
-template <typename T>
-Value<T> &Value<T>::operator-=(const Value<T> &other){
+template <typename T> Value<T> &Value<T>::operator-=(const Value<T> &other) {
     data -= other.data;
     return *this;
 }
 
-template <typename T>
-Value<T> &Value<T>::operator*=(const Value<T> &other){
+template <typename T> Value<T> &Value<T>::operator*=(const Value<T> &other) {
     data *= other.data;
     return *this;
 }
 
-template <typename T>
-Value<T> &Value<T>::operator/=(const Value<T> &other){
+template <typename T> Value<T> &Value<T>::operator/=(const Value<T> &other) {
     data /= other.data;
     return *this;
 }
@@ -277,8 +273,8 @@ template <typename T> void Value<T>::draw_graph() {
     for (const auto &values : m_sorted_values) {
         outfile << "  " << uintptr_t(values)
                 << " [label=\"label = " << values->label
-                << " | data = " << values->data
-                << " | grad = " << values->grad << "\", shape=record]\n";
+                << " | data = " << values->data << " | grad = " << values->grad
+                << "\", shape=record]\n";
         if (values->m_op != ' ') {
             // if this value is a result of some operation, create an op node
             // for it

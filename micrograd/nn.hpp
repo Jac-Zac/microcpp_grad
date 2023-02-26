@@ -19,17 +19,16 @@ template <typename T> T random_uniform(T range_from, T range_to) {
 
 template <typename T> class Neuron {
 public:
-    // Constructor
     Neuron(size_t num_neurons_input);
 
     // Call operator: w * x + b dot product
-    Value<T> operator()(std::vector<T> x);
-
-    void print_graph();
+    Value<T> operator()(std::vector<Value<T>> &x);
 
 protected:
-    Value<T> bias = Value<T>(random_uniform(-1.0, 1.0));
+    // weighted_sum already initialized with the bias
+    Value<T> weighted_sum = Value<T>(random_uniform(-1.0, 1.0));
     size_t m_num_neurons_input;
+    // Save the return value so that I can draw the graph
     std::vector<Value<T>> m_weights;
 };
 
@@ -37,40 +36,44 @@ protected:
 
 template <typename T> class Layer {
 public:
-    // Constructor
     Layer(size_t num_neurons_input, size_t num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<Value<T>> operator()(std::vector<T> x);
-
-    void print_graph();
+    std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
 
 protected:
-    size_t m_num_neurons_input;
-    size_t m_num_neurons_output;
     std::vector<Neuron<T>> m_neurons;
+    // Create an array of neurons to return
+    std::vector<Value<T>> m_neurons_output;
 };
 
 // ----------------------------------------------------------
 
+template <typename T, size_t N> class MLP {
+public:
+    MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
+
+    // Call operator: w * x + b dot product
+    std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
+
+protected:
+    std::vector<Layer<T>> m_layers;
+};
+
 //  ================ Implementation  Neuron =================
 
-template <typename T> Neuron<T>::Neuron(size_t number_of_neurons_input)
-    : m_num_neurons_input(number_of_neurons_input)
-{
+template <typename T>
+Neuron<T>::Neuron(size_t number_of_neurons_input)
+    : m_num_neurons_input(number_of_neurons_input) {
     for (size_t i = 0; i < m_num_neurons_input; i++) {
         m_weights.emplace_back(random_uniform(-1.0, 1.0));
     }
 }
 
-template <typename T>
-Value<T> Neuron<T>::operator()(std::vector<T> x) {
-    // Initialize to bias instead of adding it after
-    Value<T> weighted_sum = bias;
-
+template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
-        weighted_sum += (m_weights[i].data * x[i]);
+        weighted_sum += m_weights[i] * x[i];
     }
     // Return the activation value of the neuron as a value object
     return (weighted_sum.tanh());
@@ -78,22 +81,45 @@ Value<T> Neuron<T>::operator()(std::vector<T> x) {
 
 //  ================ Implementation  Layer =================
 
-template <typename T> Layer<T>::Layer(size_t num_neurons_input, size_t num_neurons_output)
-    : m_num_neurons_input(num_neurons_input), m_num_neurons_output(num_neurons_output)
-{
-    for(size_t i = 0; i < m_num_neurons_output ; i++){
-        m_neurons.emplace_back(Neuron<T>(m_num_neurons_input));
+template <typename T>
+Layer<T>::Layer(size_t num_neurons_input, size_t num_neurons_output) {
+    for (size_t i = 0; i < num_neurons_output; i++) {
+        m_neurons.emplace_back(Neuron<T>(num_neurons_input));
     }
 }
 
 template <typename T>
-std::vector<Value<T>> Layer<T>::operator()(std::vector<T> x) {
-    // Create an array of neurons to return
-    std::vector<Value<T>> neurons_output;
+std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> &x) {
 
     // Iterate over the m_neurons
-    for(auto &neuron : m_neurons){
-        neurons_output.emplace_back(neuron(x));
+    for (auto &neuron : m_neurons) {
+        m_neurons_output.emplace_back(neuron(x));
     }
-    return neurons_output;
+    return m_neurons_output;
+}
+
+//  ================ Implementation MLP =================
+
+template <typename T, size_t N>
+MLP<T, N>::MLP(size_t num_neurons_input,
+               std::array<size_t, N> num_neurons_output) {
+
+    // Create the first layer with the input neuron size
+    m_layers.emplace_back(Layer<T>(num_neurons_input, num_neurons_output[0]));
+
+    // Create the following layers
+    for (size_t i = 1; i < N; i++) {
+        // Create layers with
+        m_layers.emplace_back(
+            Layer<T>(num_neurons_output[i - 1], num_neurons_output[i]));
+    }
+}
+
+template <typename T, size_t N>
+std::vector<Value<T>> MLP<T, N>::operator()(std::vector<Value<T>> &x) {
+    // Iterate over the layers and call sequentially
+    for (auto &layer : m_layers) {
+        x = layer(x);
+    }
+    return x;
 }
