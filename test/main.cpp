@@ -24,7 +24,7 @@ int main() {
 
     // Run the 4 different example through the network
     for(size_t i = 0; i < 4 ; i++){
-        ypred.emplace_back(n(xs[i])[0]);
+        ypred.emplace_back(n(xs[0])[i]);
     }
 
     for (auto &value : ypred) {
