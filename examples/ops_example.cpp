@@ -47,16 +47,16 @@ int main() {
   auto c = a + b;
   auto d = a * b + (b^3);
   c = c + c + 1;
-  c = c + 1 + c + (-a);
+  c = (c + 1 + c ) - a;
   d = d + d * 2 + (b + a).relu();
   d = d + (d * 3) + (b - a).relu();
   auto e = c - d;
   auto f = e * e;
-  auto g = f / 2.0;
-  g = g + (f.inverse_value() * 10.0);
-  std::cout << g;
+  auto g = (f / 2.0);
+  g.label = "g";
+  g = g + (f.inverse_value() *10);
+  std::cout << g << '\n';
   g.backward();
-  std::cout << a;
-  std::cout << b;
-
+  std::cout << a << '\n';
+  std::cout << b << '\n';
 }

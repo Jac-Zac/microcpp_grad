@@ -21,6 +21,7 @@ enum value_ops : char {
     MUL = '*',
     DIV = '/',
     POW = '^',
+    INV = 'i',
     EXP = 'e',
     NEG = 'n',
     TANH = 't',
@@ -44,9 +45,6 @@ public:
     Value operator/(const Value &other) const;
     Value operator^(const Value &other) const;
 
-    // Unari minus operator
-    Value operator-() const;
-
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
         os << "Value(data=" << v.data << ", grad=" << v.grad
@@ -55,10 +53,10 @@ public:
     };
 
     // Other ops
-    Value inverse_value();
-    Value exp_value();
-    Value tanh();
-    Value relu();
+    Value<T> inverse_value();
+    Value<T> exp_value();
+    Value<T> tanh();
+    Value<T> relu();
 
     void backward();
     void draw_graph();
@@ -124,12 +122,11 @@ Value<T> Value<T>::operator/(const Value<T> &other) const {
     return result;
 }
 
-template <typename T> Value<T> Value<T>::operator-() const {
-    return *this * (-1);
-}
-
 template <typename T> Value<T> Value<T>::inverse_value() {
-    return *this ^ (-1);
+    Value<T> result = Value<T>(1/ data, "", INV);
+    result.m_prev[0] = this;
+    result.m_prev[1] = nullptr;
+    return result;
 }
 
 template <typename T> Value<T> Value<T>::exp_value() {
@@ -182,6 +179,10 @@ template <typename T> void Value<T>::_backward_single() {
             (m_prev[1]->data * pow(m_prev[0]->data, (m_prev[1]->data - 1))) *
             grad);
         break;
+    case INV:
+        // e^x is e^x which I already saved in data
+        m_prev[0]->_update_grad(-1/pow(m_prev[0]->data,2));
+        break;
     case EXP:
         // e^x is e^x which I already saved in data
         m_prev[0]->_update_grad(data * grad);
@@ -200,6 +201,7 @@ template <typename T> void Value<T>::_backward_single() {
 template <typename T> void Value<T>::_topo_sort(Value<T> *v) {
     // Add it to the visited values
     m_visited.insert(v);
+
     // Iterate trough the children
     for (auto *child : v->m_prev) {
         // If not visited and not a leaf value
