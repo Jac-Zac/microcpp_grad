@@ -15,7 +15,7 @@
 #include <unordered_set>
 #include <vector>
 
-enum value_ops : char {
+enum ops_type : char {
     SUM = '+',
     DIF = '-',
     MUL = '*',
@@ -39,11 +39,48 @@ public:
 
     // Operator Overloading
     // lvalues and rvalues because of const reference
-    Value operator+(const Value &other) const;
-    Value operator*(const Value &other) const;
-    Value operator-(const Value &other) const;
-    Value operator/(const Value &other) const;
-    Value operator^(const Value &other) const;
+
+    // Operator Overloading
+    // Operator Overloading
+    friend Value operator+(const Value &lhs, const Value &rhs) {
+        Value result(lhs.data + rhs.data, "", SUM);
+        result.m_prev[0] = const_cast<Value *>(&lhs);
+        result.m_prev[1] = const_cast<Value *>(&rhs);
+        return result;
+    }
+
+    friend Value operator-(const Value &lhs, const Value &rhs) {
+        Value result(lhs.data - rhs.data, "", DIF);
+        result.m_prev[0] = const_cast<Value *>(&lhs);
+        result.m_prev[1] = const_cast<Value *>(&rhs);
+        return result;
+    }
+
+    friend Value operator*(const Value &lhs, const Value &rhs) {
+        Value result(lhs.data * rhs.data, "", MUL);
+        result.m_prev[0] = const_cast<Value *>(&lhs);
+        result.m_prev[1] = const_cast<Value *>(&rhs);
+        return result;
+    }
+
+    friend Value operator/(const Value &lhs, const Value &rhs) {
+        Value result(lhs.data / rhs.data, "", DIV);
+        result.m_prev[0] = const_cast<Value *>(&lhs);
+        result.m_prev[1] = const_cast<Value *>(&rhs);
+        return result;
+    }
+
+    friend Value operator^(const Value &lhs, const Value &rhs) {
+        Value result(pow(lhs.data, rhs.data), "", DIV);
+        result.m_prev[0] = const_cast<Value *>(&lhs);
+        result.m_prev[1] = const_cast<Value *>(&rhs);
+        return result;
+    }
+
+    Value &operator+=(const Value &rhs) {
+        *this = *this + rhs;
+        return *this;
+    }
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -82,48 +119,8 @@ Value<T>::Value(T data, std::string label, char op)
     : data(data), label(label), m_op(op), grad(0.0),
       m_prev({nullptr, nullptr}) {}
 
-template <typename T>
-Value<T> Value<T>::operator+(const Value<T> &other) const {
-    Value<T> result = Value<T>(data + other.data, "", SUM);
-    result.m_prev[0] = const_cast<Value<T> *>(this);
-    result.m_prev[1] = const_cast<Value<T> *>(&other);
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator-(const Value<T> &other) const {
-    Value<T> result = Value<T>(data - other.data, "", DIF);
-    result.m_prev[0] = const_cast<Value<T> *>(this);
-    result.m_prev[1] = const_cast<Value<T> *>(&other);
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator*(const Value<T> &other) const {
-    Value<T> result = Value<T>(data * other.data, "", MUL);
-    result.m_prev[0] = const_cast<Value<T> *>(this);
-    result.m_prev[1] = const_cast<Value<T> *>(&other);
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator^(const Value<T> &other) const {
-    Value<T> result = Value<T>(pow(data, other.data), "", POW);
-    result.m_prev[0] = const_cast<Value<T> *>(this);
-    result.m_prev[1] = const_cast<Value<T> *>(&other);
-    return result;
-}
-
-template <typename T>
-Value<T> Value<T>::operator/(const Value<T> &other) const {
-    Value<T> result = Value<T>(data / other.data, "", DIV);
-    result.m_prev[0] = const_cast<Value<T> *>(this);
-    result.m_prev[1] = const_cast<Value<T> *>(&other);
-    return result;
-}
-
 template <typename T> Value<T> Value<T>::inverse_value() {
-    Value<T> result = Value<T>(1/ data, "", INV);
+    Value<T> result = Value<T>(1 / data, "", INV);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
     return result;
@@ -156,8 +153,8 @@ template <typename T> void Value<T>::_backward_single() {
     case SUM:
         // Should just move the gradient along to both of them
         // += because we want to avoid bugs if we reuse a variable
-        m_prev[0]->_update_grad(grad);
-        m_prev[1]->_update_grad(grad);
+        m_prev[0]->_update_grad(this->grad);
+        m_prev[1]->_update_grad(this->grad);
         break;
     case DIF:
         // same as m_prev[0] += 1.0 * grad;
@@ -181,7 +178,7 @@ template <typename T> void Value<T>::_backward_single() {
         break;
     case INV:
         // e^x is e^x which I already saved in data
-        m_prev[0]->_update_grad(-1/pow(m_prev[0]->data,2));
+        m_prev[0]->_update_grad(-1 / pow(m_prev[0]->data, 2));
         break;
     case EXP:
         // e^x is e^x which I already saved in data

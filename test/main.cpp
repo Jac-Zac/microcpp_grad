@@ -12,10 +12,8 @@ int main() {
 
     // std::cout << n; // to output the network shape
 
-    std::vector<std::vector<Value<TYPE>>> xs = {{2.0, 3.0, -1.0},
-                                                {3.0, -1.0, 0.5},
-                                                {0.5, 1.0, 1.0},
-                                                {1.0, 1.0, -1.0}};
+    std::vector<std::vector<Value<TYPE>>> xs = {
+        {2.0, 3.0, -1.0}, {3.0, -1.0, 0.5}, {0.5, 1.0, 1.0}, {1.0, 1.0, -1.0}};
 
     // desired target
     std::vector<Value<TYPE>> ys = {1.0, -1.0, -1.0, 1.0};
@@ -24,22 +22,20 @@ int main() {
 
     // Forward pass
     // Run the 4 different example through the network
-    for(size_t i = 0; i < 4 ; i++){
+    for (size_t i = 0; i < 4; i++) {
         ypred.emplace_back(n(xs[0])[i]);
     }
-
 
     for (auto &value : ypred) {
         /* std::cout << value << '\n'; */
         value.draw_graph();
     }
 
-
     Value<TYPE> loss = Value<TYPE>(0, "loss");
 
     Value<TYPE> tmp = Value<TYPE>(0, "tmp");
 
-    for (size_t i = 0; i < 4; i++){
+    for (size_t i = 0; i < 4; i++) {
         // Mean Squared Error
         tmp = (ypred[i] - ys[i]);
         loss = loss + (tmp ^ 2);
@@ -54,5 +50,4 @@ int main() {
     loss.draw_graph();
 
     std::cout << n.m_layers[0].m_neurons[0].m_weights[0] << '\n';
-
 }

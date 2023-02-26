@@ -42,21 +42,23 @@
 
 int main() {
     // Testing
-  auto a = Value<double>(-4.0);
-  auto b = Value<double>(2.0);
-  auto c = a + b;
-  auto d = a * b + (b^3);
-  c = c + c + 1;
-  c = (c + 1 + c ) - a;
-  d = d + d * 2 + (b + a).relu();
-  d = d + (d * 3) + (b - a).relu();
-  auto e = c - d;
-  auto f = e * e;
-  auto g = (f / 2.0);
-  g.label = "g";
-  g = g + (f.inverse_value() *10);
-  std::cout << g << '\n';
-  g.backward();
-  std::cout << a << '\n';
-  std::cout << b << '\n';
+    auto a = Value<double>(-4.0);
+    auto b = Value<double>(2.0);
+    auto c = a + b;
+    auto d = a * b + (b ^ 3);
+    c = c + c + 1;
+    c = (c + 1 + c) - a;
+    d = d + d * 2 + (b + a).relu();
+    d = d + (d * 3) + (b - a).relu();
+    auto e = c - d;
+    auto f = e * e;
+    auto g = (f / 2.0);
+    g.label = "g";
+    auto mid = (f.inverse_value() * 10);
+    g += mid;
+    g.backward();
+    g.draw_graph();
+    std::cout << g << '\n';
+    std::cout << a << '\n';
+    std::cout << b << '\n';
 }

@@ -15,8 +15,8 @@ template <typename T> T random_uniform(T range_from, T range_to) {
     return distr(generator);
 }
 
-
-// THIS IS NOT THE MOST EFFICIENT IMPLEMENTATION BUT SAVES ALL THE INTERMEDIATE STATES TO DRAW THE GRAPH
+// THIS IS NOT THE MOST EFFICIENT IMPLEMENTATION BUT SAVES ALL THE INTERMEDIATE
+// STATES TO DRAW THE GRAPH
 
 // ---------------------------------------------------------
 
@@ -61,7 +61,7 @@ public:
     std::vector<Value<T>> operator()(std::vector<Value<T>> x);
 
     // << operator overload to get the structure of the network
-    std::ostream& operator<<(std::ostream &os);
+    std::ostream &operator<<(std::ostream &os);
 
 public:
     const size_t m_num_neurons_in;
@@ -118,8 +118,8 @@ std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> x) {
 template <typename T, size_t N>
 MLP<T, N>::MLP(size_t num_neurons_input,
                std::array<size_t, N> num_neurons_output)
-    : m_num_neurons_in(num_neurons_input), m_num_neurons_out(num_neurons_output)
-{
+    : m_num_neurons_in(num_neurons_input),
+      m_num_neurons_out(num_neurons_output) {
 
     // Create the first layer with the input neuron size
     m_layers.emplace_back(Layer<T>(num_neurons_input, num_neurons_output[0]));
@@ -137,7 +137,7 @@ std::vector<Value<T>> MLP<T, N>::operator()(std::vector<Value<T>> x) {
 
     std::vector<Value<T>> layer_output = x;
 
-    for(Layer<T> layer : m_layers){
+    for (Layer<T> layer : m_layers) {
         layer_output = layer(layer_output);
     }
 
@@ -147,9 +147,9 @@ std::vector<Value<T>> MLP<T, N>::operator()(std::vector<Value<T>> x) {
 // Overloading for the output to standard out ---------------------------
 
 template <typename T, size_t N>
-std::ostream& operator<<(std::ostream& os, const MLP<T, N>& mlp) {
+std::ostream &operator<<(std::ostream &os, const MLP<T, N> &mlp) {
     os << "Network of " << N + 1 << " Layers: [ " << mlp.m_num_neurons_in;
-    for (size_t i = 0; i < N; i++){
+    for (size_t i = 0; i < N; i++) {
         os << " , " << mlp.m_num_neurons_out[i];
     }
     os << " ]\n";
