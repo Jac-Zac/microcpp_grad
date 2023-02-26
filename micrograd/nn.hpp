@@ -27,7 +27,7 @@ public:
     // Call operator: w * x + b dot product
     Value<T> operator()(std::vector<Value<T>> &x);
 
-protected:
+public:
     size_t m_num_neurons_input;
     // Save the return value so that I can draw the graph
     std::vector<Value<T>> m_weights;
@@ -44,7 +44,7 @@ public:
     // Call operator: w * x + b dot product
     std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
 
-protected:
+public:
     std::vector<Neuron<T>> m_neurons;
     // Create an array of neurons to return
     std::vector<Value<T>> m_neurons_output;
@@ -66,7 +66,7 @@ public:
     const size_t m_num_neurons_in;
     const std::array<size_t, N> m_num_neurons_out;
 
-protected:
+public:
     std::vector<Layer<T>> m_layers;
     // Store the previous layers
     std::array<std::vector<Value<T>>,N + 1> m_layers_computed;

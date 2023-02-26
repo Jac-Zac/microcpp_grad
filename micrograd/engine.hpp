@@ -92,21 +92,29 @@ Value<T>::Value(T data, std::string label, char op)
 template <typename T> Value<T> &Value<T>::operator+=(const Value<T> &other) {
     // update the data
     data += other.data;
+    m_prev[0] = const_cast<Value<T> *>(this);
+    m_prev[1] = const_cast<Value<T> *>(&other);
     return *this;
 }
 
 template <typename T> Value<T> &Value<T>::operator-=(const Value<T> &other) {
     data -= other.data;
+    m_prev[0] = const_cast<Value<T> *>(this);
+    m_prev[1] = const_cast<Value<T> *>(&other);
     return *this;
 }
 
 template <typename T> Value<T> &Value<T>::operator*=(const Value<T> &other) {
     data *= other.data;
+    m_prev[0] = const_cast<Value<T> *>(this);
+    m_prev[1] = const_cast<Value<T> *>(&other);
     return *this;
 }
 
 template <typename T> Value<T> &Value<T>::operator/=(const Value<T> &other) {
     data /= other.data;
+    m_prev[0] = const_cast<Value<T> *>(this);
+    m_prev[1] = const_cast<Value<T> *>(&other);
     return *this;
 }
 
