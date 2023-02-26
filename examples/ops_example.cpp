@@ -19,7 +19,7 @@ int main() {
     x1w1_x2w2.label = "x1w1 + x2w2";
 
     // Bias of the neuron b
-    auto b = Value<double>(6.881375870, "b");
+    auto b = Value<double>(6.8813735870195432, "b");
 
     // new neuron
     auto n = (x1w1_x2w2 + b);

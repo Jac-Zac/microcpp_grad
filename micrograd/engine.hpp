@@ -30,6 +30,8 @@ enum value_ops : char {
 template <typename T> class Value {
 public:
     std::string label; // label of the value
+    T data; // data of the value
+    T grad; // gradient which by default is zero
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
@@ -45,14 +47,14 @@ public:
     // Unari minus operator
     Value operator-() const;
 
-    Value &operator+=(const Value &other) const;
-    Value &operator-=(const Value &other) const;
-    Value &operator*=(const Value &other) const;
-    Value &operator/=(const Value &other) const;
+    Value &operator+=(const Value &other);
+    Value &operator-=(const Value &other);
+    Value &operator*=(const Value &other);
+    Value &operator/=(const Value &other);
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
-        os << "Value(data=" << v.data << ", grad=" << v.m_grad
+        os << "Value(data=" << v.data << ", grad=" << v.grad
            << ", label=" << v.label << ")";
         return os;
     };
@@ -67,9 +69,7 @@ public:
     void draw_graph();
 
 protected:
-    T data; // data of the value
     char m_op;
-    T m_grad;                         // gradient which by default is zero
     std::array<Value<T> *, 2> m_prev; // previous values
     std::vector<Value<T> *>
         m_sorted_values; // vector to store the sorted values
@@ -79,37 +79,37 @@ protected:
     void _topo_sort(Value<T> *v);
     void _backward_single(); // 1 step of backdrop
     // Function to update the gradient
-    void _update_grad(T m_grad) { this->m_grad += m_grad; }
+    void _update_grad(T grad) { this->grad += grad; }
 };
 
 // ==================== Implementation =====================
 
 template <typename T>
 Value<T>::Value(T data, std::string label, char op)
-    : data(data), label(label), m_op(op), m_grad(0.0),
+    : data(data), label(label), m_op(op), grad(0.0),
       m_prev({nullptr, nullptr}) {}
 
 template <typename T>
-Value<T> &Value<T>::operator+=(const Value<T> &other) const {
+Value<T> &Value<T>::operator+=(const Value<T> &other){
     // update the data
     data += other.data;
     return *this;
 }
 
 template <typename T>
-Value<T> &Value<T>::operator-=(const Value<T> &other) const {
+Value<T> &Value<T>::operator-=(const Value<T> &other){
     data -= other.data;
     return *this;
 }
 
 template <typename T>
-Value<T> &Value<T>::operator*=(const Value<T> &other) const {
+Value<T> &Value<T>::operator*=(const Value<T> &other){
     data *= other.data;
     return *this;
 }
 
 template <typename T>
-Value<T> &Value<T>::operator/=(const Value<T> &other) const {
+Value<T> &Value<T>::operator/=(const Value<T> &other){
     data /= other.data;
     return *this;
 }
@@ -170,7 +170,7 @@ template <typename T> Value<T> Value<T>::exp_value() {
 }
 
 template <typename T> Value<T> Value<T>::tanh() {
-    Value<T> result = Value<T>(data.tanh(), "", TANH);
+    Value<T> result = Value<T>(std::tanh(data), "", TANH);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
     return result;
@@ -189,38 +189,38 @@ template <typename T> void Value<T>::_backward_single() {
     case SUM:
         // Should just move the gradient along to both of them
         // += because we want to avoid bugs if we reuse a variable
-        m_prev[0]->_update_grad(m_grad);
-        m_prev[1]->_update_grad(m_grad);
+        m_prev[0]->_update_grad(grad);
+        m_prev[1]->_update_grad(grad);
         break;
     case DIF:
-        // same as m_prev[0] += 1.0 * m_grad;
-        m_prev[0]->_update_grad(m_grad);
-        m_prev[1]->_update_grad(-m_grad); // same as doing -=
+        // same as m_prev[0] += 1.0 * grad;
+        m_prev[0]->_update_grad(grad);
+        m_prev[1]->_update_grad(-grad); // same as doing -=
         break;
     case MUL:
-        // same as m_prev[0] += m_prev[1]->data * m_grad
-        m_prev[0]->_update_grad(m_prev[1]->data * m_grad);
-        m_prev[1]->_update_grad(m_prev[0]->data * m_grad);
+        // same as m_prev[0] += m_prev[1]->data * grad
+        m_prev[0]->_update_grad(m_prev[1]->data * grad);
+        m_prev[1]->_update_grad(m_prev[0]->data * grad);
         break;
     case DIV:
-        m_prev[0]->_update_grad((1 / (m_prev[1]->data)) * m_grad);
+        m_prev[0]->_update_grad((1 / (m_prev[1]->data)) * grad);
         m_prev[1]->_update_grad(-(m_prev[0]->data) / pow(m_prev[1]->data, 2) *
-                                m_grad);
+                                grad);
         break;
     case POW:
         m_prev[0]->_update_grad(
             (m_prev[1]->data * pow(m_prev[0]->data, (m_prev[1]->data - 1))) *
-            m_grad);
+            grad);
         break;
     case EXP:
         // e^x is e^x which I already saved in data
-        m_prev[0]->_update_grad(data * m_grad);
+        m_prev[0]->_update_grad(data * grad);
         break;
     case TANH:
-        m_prev[0]->_update_grad((1 - pow(data, 2)) * m_grad);
+        m_prev[0]->_update_grad((1 - pow(data, 2)) * grad);
         break;
     case RELU:
-        m_prev[0]->_update_grad(data > 0 ? data : 0);
+        m_prev[0]->_update_grad(data > 0 ? 1 : 0);
         break;
     default:
         break;
@@ -249,7 +249,7 @@ template <typename T> void Value<T>::backward() {
     }
 
     // Set the derivative of dx/dx to 1
-    this->m_grad = 1.0;
+    this->grad = 1.0;
 
     // Call backward in topological order applying the chain rule automatically
     for (auto it = m_sorted_values.rbegin(); it != m_sorted_values.rend();
@@ -278,7 +278,7 @@ template <typename T> void Value<T>::draw_graph() {
         outfile << "  " << uintptr_t(values)
                 << " [label=\"label = " << values->label
                 << " | data = " << values->data
-                << " | grad = " << values->m_grad << "\", shape=record]\n";
+                << " | grad = " << values->grad << "\", shape=record]\n";
         if (values->m_op != ' ') {
             // if this value is a result of some operation, create an op node
             // for it

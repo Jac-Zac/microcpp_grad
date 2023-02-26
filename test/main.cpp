@@ -1,9 +1,7 @@
 #include "../micrograd/nn.hpp"
 
-#define NUMBER_OF_NEURONS 2
-
 int main() {
-    std::vector<double> x = {2.0, 3.0};
-    auto n = Neuron<double>();
+    std::vector<double> x = {2.0, -4.5};
+    auto n = Neuron<double>(2);
     std::cout << n(x) << '\n';
 }
