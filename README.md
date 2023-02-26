@@ -37,7 +37,7 @@ int main() {
     auto b = Value<double>(6.881375870, "b");
 
     // new neuron
-    auto n = x1w1_x2w2 + b;
+    auto n = (x1w1_x2w2 + b);
     n.label = "n";
 
     // auto o = n.tanh();
@@ -45,12 +45,7 @@ int main() {
     // Custom tanh implementation
     auto e = (n * 2).exp_value();
     e.label = "e";
-    auto mid1 = (e - 1);
-    mid1.label = "mid1";
-    auto mid2 = (e + 1);
-    mid2.label = "mid2";
-    auto o = mid1 / mid2;
-
+    auto o = (e - 1) / (e + 1);
     o.label = "o";
 
     // Grandina with respect to itself is 1

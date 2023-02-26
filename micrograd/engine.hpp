@@ -33,24 +33,22 @@ public:
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
-    ~Value();
 
     // Operator Overloading
-    // lvalues version
-    Value operator+(Value &other);
-    Value operator*(Value &other);
-    Value operator-(Value &other);
-    Value operator/(Value &other);
-    Value operator^(Value &other);
-    // rvalues version
-    Value operator+(T other);
-    Value operator*(T other);
-    Value operator-(T other);
-    Value operator/(T other);
-    Value operator^(T other);
-    Value operator+=(const Value &other);
+    // lvalues and rvalues because of const reference
+    Value operator+(const Value &other) const;
+    Value operator*(const Value &other) const;
+    Value operator-(const Value &other) const;
+    Value operator/(const Value &other) const;
+    Value operator^(const Value &other) const;
+
     // Unari minus operator
-    Value operator-();
+    Value operator-() const;
+
+    Value& operator+=(const Value &other) const;
+    Value& operator-=(const Value &other) const;
+    Value& operator*=(const Value &other) const;
+    Value& operator/=(const Value &other) const;
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -79,7 +77,10 @@ protected:
 protected:
     // Helper function to make a topological sort
     void _topo_sort(Value<T> *v);
-    void _backward(); // 1 step of backdrop
+    void _backward_single(); // 1 step of backdrop
+    // Function to update the gradient
+    void _update_grad(T m_grad) {this->m_grad += m_grad;}
+
 };
 
 // ==================== Implementation =====================
@@ -89,88 +90,68 @@ Value<T>::Value(T data, std::string label, char op)
     : data(data), label(label), m_op(op), m_grad(0.0),
       m_prev({nullptr, nullptr}) {}
 
-template <typename T>
-Value<T>::~Value(){
-
-}
-
-template <typename T> Value<T> Value<T>::operator+=(const Value<T> &other) {
+template <typename T> Value<T>& Value<T>::operator+=(const Value<T> &other) const {
     // Increment a value by another value
     data += other.data;
     return *this;
 }
 
-template <typename T> Value<T> Value<T>::operator+(Value<T> &other) {
+template <typename T> Value<T>& Value<T>::operator-=(const Value<T> &other) const {
+    // Increment a value by another value
+    data -= other.data;
+    return *this;
+}
+
+template <typename T> Value<T>& Value<T>::operator*=(const Value<T> &other) const {
+    // Increment a value by another value
+    data -= other.data;
+    return *this;
+}
+
+template <typename T> Value<T>& Value<T>::operator/=(const Value<T> &other) const {
+    // Increment a value by another value
+    data /= other.data;
+    return *this;
+}
+
+template <typename T> Value<T> Value<T>::operator+(const Value<T> &other) const {
     Value<T> result = Value<T>(data + other.data, "", SUM);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
+    result.m_prev[0] = const_cast<Value<T>*>(this);
+    result.m_prev[1] = const_cast<Value<T>*>(&other);
     return result;
 }
 
-template <typename T> Value<T> Value<T>::operator+(T other) {
-    Value<T> result = Value<T>(data + other, "", SUM);
-    result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf");
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator-(Value<T> &other) {
+template <typename T> Value<T> Value<T>::operator-(const Value<T> &other) const {
     Value<T> result = Value<T>(data - other.data, "", DIF);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
+    result.m_prev[0] = const_cast<Value<T>*>(this);
+    result.m_prev[1] = const_cast<Value<T>*>(&other);
     return result;
 }
 
-template <typename T> Value<T> Value<T>::operator-(T other) {
-    Value<T> result = Value<T>(data - other, "", DIF);
-    result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf");
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator*(Value<T> &other) {
+template <typename T> Value<T> Value<T>::operator*(const Value<T> &other) const {
     Value<T> result = Value<T>(data * other.data, "", MUL);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
+    result.m_prev[0] = const_cast<Value<T>*>(this);
+    result.m_prev[1] = const_cast<Value<T>*>(&other);
     return result;
 }
 
-template <typename T> Value<T> Value<T>::operator*(T other) {
-    Value<T> result = Value<T>(data * other, "", MUL);
-    result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf");
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator^(Value<T> &other) {
+template <typename T> Value<T> Value<T>::operator^(const Value<T> &other) const {
     Value<T> result = Value<T>(pow(data, other.data), "", POW);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
+    result.m_prev[0] = const_cast<Value<T>*>(this);
+    result.m_prev[1] = const_cast<Value<T>*>(&other);
     return result;
 }
 
-template <typename T> Value<T> Value<T>::operator^(T other) {
-    Value<T> result = Value<T>(pow(data, other), "", POW);
-    result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf");
-    return result;
-}
-
-template <typename T> Value<T> Value<T>::operator/(Value<T> &other) {
+template <typename T> Value<T> Value<T>::operator/(const Value<T> &other) const {
     Value<T> result = Value<T>(data / other.data, "", DIV);
-    result.m_prev[0] = this;
-    result.m_prev[1] = &other;
+    result.m_prev[0] = const_cast<Value<T>*>(this);
+    result.m_prev[1] = const_cast<Value<T>*>(&other);
     return result;
 }
 
-template <typename T> Value<T> Value<T>::operator/(T other) {
-    Value<T> result = Value<T>(data / data, "", DIV);
-    result.m_prev[0] = this;
-    result.m_prev[1] = new Value<T>(other, "leaf");
-    return result;
+template <typename T> Value<T> Value<T>::operator-() const {
+    return *this * (-1);
 }
-
-template <typename T> Value<T> Value<T>::operator-() { return *this * (-1); }
 
 template <typename T> Value<T> Value<T>::inverse_value() {
     return *this ^ (-1);
@@ -184,58 +165,52 @@ template <typename T> Value<T> Value<T>::exp_value() {
 }
 
 template <typename T> Value<T> Value<T>::tanh() {
-    T x = this->data;
-    T tanh = (exp(2 * x) - 1) / (exp(2 * x) + 1);
-    Value<T> result = Value<T>(tanh, "", TANH);
+    Value<T> result = Value<T>(data.tanh(), "", TANH);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
     return result;
 }
 
 template <typename T> Value<T> Value<T>::relu() {
-    T relu = this->data < 0 ? 0 : this->data;
+    T relu = data < 0 ? 0 : data;
     Value<T> result = Value<T>(relu, "", RELU);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
     return result;
 }
 
-template <typename T> void Value<T>::_backward() {
+template <typename T> void Value<T>::_backward_single() {
     switch (this->m_op) {
     case SUM:
         // Should just move the gradient along to both of them
         // += because we want to avoid bugs if we reuse a variable
-        this->m_prev[0]->m_grad += 1.0 * this->m_grad;
-        this->m_prev[1]->m_grad += 1.0 * this->m_grad;
+        m_prev[0]->_update_grad(m_grad);
+        m_prev[1]->_update_grad(m_grad);
         break;
     case DIF:
-        this->m_prev[0]->m_grad += 1.0 * this->m_grad;
-        this->m_prev[1]->m_grad -= 1.0 * this->m_grad;
+        m_prev[0]->_update_grad(m_grad);
+        m_prev[1]->_update_grad(-m_grad); // same as doing -=
         break;
     case MUL:
-        this->m_prev[0]->m_grad += this->m_prev[1]->data * this->m_grad;
-        this->m_prev[1]->m_grad += this->m_prev[0]->data * this->m_grad;
+        m_prev[0]->_update_grad(m_prev[1]->data * m_grad);
+        m_prev[1]->_update_grad(m_prev[0]->data * m_grad);
         break;
     case DIV:
-        this->m_prev[0]->m_grad += (1 / (this->m_prev[1]->data)) * this->m_grad;
-        this->m_prev[1]->m_grad -= (this->m_prev[0]->data) /
-                                   pow(this->m_prev[1]->data, 2) * this->m_grad;
+        m_prev[0]->_update_grad((1 / (m_prev[1]->data)) * m_grad);
+        m_prev[1]->_update_grad(- (m_prev[0]->data) / pow(m_prev[1]->data, 2) * m_grad);
         break;
     case POW:
-        this->m_prev[0]->m_grad +=
-            (this->m_prev[1]->data *
-             pow(this->m_prev[0]->data, (this->m_prev[1]->data - 1))) *
-            this->m_grad;
+        m_prev[0]->_update_grad((m_prev[1]->data * pow(m_prev[0]->data, (m_prev[1]->data - 1))) * m_grad);
         break;
     case EXP:
-        // e^x is e^x which I already saved in this->data
-        this->m_prev[0]->m_grad += this->data * this->m_grad;
+        // e^x is e^x which I already saved in data
+        m_prev[0]->_update_grad(data * m_grad);
         break;
     case TANH:
-        this->m_prev[0]->m_grad += (1 - pow(this->data, 2)) * this->m_grad;
+        m_prev[0]->_update_grad((1 - pow(data, 2)) * m_grad);
         break;
     case RELU:
-        this->m_prev[0]->m_grad += this->data > 0 ? this->data : 0;
+        m_prev[0]->_update_grad(data > 0 ? data : 0);
         break;
     default:
         break;
@@ -268,7 +243,7 @@ template <typename T> void Value<T>::backward() {
 
     // Call backward in topological order applying the chain rule automatically
     for (auto it = m_sorted_values.rbegin(); it != m_sorted_values.rend(); ++it) {
-        (*it)->_backward();
+        (*it)->_backward_single();
     }
 }
 
