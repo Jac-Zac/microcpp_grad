@@ -8,33 +8,44 @@
 #include "engine.hpp"
 #include <random>
 
-template <size_t N> class Neuron {
-public:
-    double bias;
-    std::array<double, N> weights;
-
-public:
-    // Constructor
-    Neuron();
-    // Operator
-
-    double operator()(std::array<double, N> x) { return 0.0; }
-
-    void print_graph();
-};
-
-template <typename T> T random_uniform(T range_from, T range_to) {
+template <typename T> T
+random_uniform(T range_from, T range_to) {
     std::random_device rand_dev;
     std::mt19937 generator(rand_dev());
     std::uniform_real_distribution<T> distr(range_from, range_to);
     return distr(generator);
 }
 
+template <typename T>
+class Neuron {
+public:
+    Value<T> bias = random_uniform(-1.0,1.0);
+    std::vector<Value<T>> weights;
+public:
+    // Constructor
+    Neuron();
+
+    // Operator
+    Value<T> operator()(std::vector<T> x) {
+        // Initialize to bias instead of adding it after
+        Value<T> weighted_sum = bias;
+
+        // Sum over all multiplies
+        for(size_t i = 0; i < x.size(); i++){
+            weighted_sum += (weights[i] * x[i]);
+        }
+        // Return the activation value of the neuron
+        return weighted_sum.tanh();
+    }
+
+    void print_graph();
+};
+
 // ==================== Implementation =====================
 
-template <size_t N> Neuron<N>::Neuron() {
-    for (size_t j = 0; j < N; j++) {
-        weights[j] = random_uniform(-1.0, 1.0);
+template <typename T>
+Neuron<T>::Neuron() {
+    for (size_t i = 0; i < 2; i++) {
+        weights.emplace_back(random_uniform(-1.0,1.0));
     }
-    bias = random_uniform(-1.0, 1.0);
 }

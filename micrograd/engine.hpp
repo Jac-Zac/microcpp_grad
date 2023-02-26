@@ -48,6 +48,7 @@ public:
     Value operator-(T other);
     Value operator/(T other);
     Value operator^(T other);
+    Value operator+=(const Value &other);
     // Unari minus operator
     Value operator-();
 
@@ -91,6 +92,12 @@ Value<T>::Value(T data, std::string label, char op)
 template <typename T>
 Value<T>::~Value(){
 
+}
+
+template <typename T> Value<T> Value<T>::operator+=(const Value<T> &other) {
+    // Increment a value by another value
+    data += other.data;
+    return *this;
 }
 
 template <typename T> Value<T> Value<T>::operator+(Value<T> &other) {
