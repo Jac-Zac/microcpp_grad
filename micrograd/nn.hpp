@@ -25,14 +25,15 @@ public:
     Neuron(size_t num_neurons_input);
 
     // Call operator: w * x + b dot product
-    Value<T> operator()(std::vector<Value<T>> &x);
+    Value<T> operator()(std::vector<Value<T>> x);
 
 public:
     size_t m_num_neurons_input;
     // Save the return value so that I can draw the graph
     std::vector<Value<T>> m_weights;
     // weighted_sum already initialized with the bias
-    Value<T> m_weighted_sum = Value<T>(random_uniform(-1.0, 1.0));
+    Value<T> m_weighted_sum = Value<T>(0);
+    Value<T> bias = Value<T>(random_uniform(-1.0, 1.0));
 };
 
 // ---------------------------------------------------------
@@ -42,7 +43,7 @@ public:
     Layer(size_t num_neurons_input, size_t num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
+    std::vector<Value<T>> operator()(std::vector<Value<T>> x);
 
 public:
     std::vector<Neuron<T>> m_neurons;
@@ -57,7 +58,7 @@ public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
+    std::vector<Value<T>> operator()(std::vector<Value<T>> x);
 
     // << operator overload to get the structure of the network
     std::ostream& operator<<(std::ostream &os);
@@ -68,8 +69,6 @@ public:
 
 public:
     std::vector<Layer<T>> m_layers;
-    // Store the previous layers
-    std::array<std::vector<Value<T>>,N + 1> m_layers_computed;
 };
 
 //  ================ Implementation  Neuron =================
@@ -78,16 +77,18 @@ template <typename T>
 Neuron<T>::Neuron(size_t number_of_neurons_input)
     : m_num_neurons_input(number_of_neurons_input) {
     for (size_t i = 0; i < m_num_neurons_input; i++) {
-        m_weights.emplace_back(random_uniform(-1.0, 1.0));
+        m_weights.emplace_back(Value<T>(random_uniform(-1.0, 1.0)));
     }
 }
 
-template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
+template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> x) {
 
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
-        m_weighted_sum += m_weights[i] * x[i];
+        m_weighted_sum = m_weighted_sum + (m_weights[i] * x[i]);
     }
+
+    m_weighted_sum = m_weighted_sum + bias;
 
     // Return the activation value of the neuron as a value object
     return (m_weighted_sum.tanh());
@@ -103,11 +104,11 @@ Layer<T>::Layer(size_t num_neurons_input, size_t num_neurons_output) {
 }
 
 template <typename T>
-std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> &x) {
+std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> x) {
 
     // Iterate over the m_neurons
     for (auto &neuron : m_neurons) {
-        m_neurons_output.emplace_back(neuron(x));
+        m_neurons_output.emplace_back(Neuron<T>(neuron(x)));
     }
     return m_neurons_output;
 }
@@ -132,19 +133,15 @@ MLP<T, N>::MLP(size_t num_neurons_input,
 }
 
 template <typename T, size_t N>
-std::vector<Value<T>> MLP<T, N>::operator()(std::vector<Value<T>> &x) {
+std::vector<Value<T>> MLP<T, N>::operator()(std::vector<Value<T>> x) {
 
-    // Save the input layer in the computed layers
-    m_layers_computed[0] = x;
+    std::vector<Value<T>> layer_output = x;
 
-    // loop trough all the N + 1 layers where N is the number of layer without the input one
-    for (size_t j = 0; j < N; j++){
-        // Save the output of the new layer using the output of the previous one
-        m_layers_computed[j + 1] = m_layers[j](m_layers_computed[j]);
+    for(Layer<T> layer : m_layers){
+        layer_output = layer(layer_output);
     }
 
-    // Return the last element of the vector
-    return m_layers_computed[N];
+    return layer_output;
 }
 
 // Overloading for the output to standard out ---------------------------

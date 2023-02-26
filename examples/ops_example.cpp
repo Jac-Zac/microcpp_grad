@@ -37,20 +37,26 @@
 /*     o.backward(); */
 /*     o.draw_graph(); */
 /* } */
-/*  */
+
 #include "../micrograd/engine.hpp"
 
 int main() {
-    // Creating a single perception
+    // Testing
+  auto a = Value<double>(-4.0);
+  auto b = Value<double>(2.0);
+  auto c = a + b;
+  auto d = a * b + (b^3);
+  c = c + c + 1;
+  c = c + 1 + c + (-a);
+  d = d + d * 2 + (b + a).relu();
+  d = d + (d * 3) + (b - a).relu();
+  auto e = c - d;
+  auto f = e * e;
+  auto g = f / 2.0;
+  g = g + (f.inverse_value() * 10.0);
+  std::cout << g;
+  g.backward();
+  std::cout << a;
+  std::cout << b;
 
-    // Input x1, x2
-    auto x1 = Value<double>(2.0, "x1"), x2 = Value<double>(0.0, "x2");
-    // Weight w1, w2
-    auto w1 = Value<double>(-3.0, "w1"), w2 = Value<double>(1.0, "w2");
-
-    // products
-    auto x3 = (x2 * 2);
-    x1 += x3;
-    x1.backward();
-    x1.draw_graph();
 }

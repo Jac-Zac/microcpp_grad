@@ -47,11 +47,6 @@ public:
     // Unari minus operator
     Value operator-() const;
 
-    Value &operator+=(const Value &other);
-    Value &operator-=(const Value &other);
-    Value &operator*=(const Value &other);
-    Value &operator/=(const Value &other);
-
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
         os << "Value(data=" << v.data << ", grad=" << v.grad
@@ -88,35 +83,6 @@ template <typename T>
 Value<T>::Value(T data, std::string label, char op)
     : data(data), label(label), m_op(op), grad(0.0),
       m_prev({nullptr, nullptr}) {}
-
-template <typename T> Value<T> &Value<T>::operator+=(const Value<T> &other) {
-    // update the data
-    data += other.data;
-    m_prev[0] = const_cast<Value<T> *>(this);
-    m_prev[1] = const_cast<Value<T> *>(&other);
-    return *this;
-}
-
-template <typename T> Value<T> &Value<T>::operator-=(const Value<T> &other) {
-    data -= other.data;
-    m_prev[0] = const_cast<Value<T> *>(this);
-    m_prev[1] = const_cast<Value<T> *>(&other);
-    return *this;
-}
-
-template <typename T> Value<T> &Value<T>::operator*=(const Value<T> &other) {
-    data *= other.data;
-    m_prev[0] = const_cast<Value<T> *>(this);
-    m_prev[1] = const_cast<Value<T> *>(&other);
-    return *this;
-}
-
-template <typename T> Value<T> &Value<T>::operator/=(const Value<T> &other) {
-    data /= other.data;
-    m_prev[0] = const_cast<Value<T> *>(this);
-    m_prev[1] = const_cast<Value<T> *>(&other);
-    return *this;
-}
 
 template <typename T>
 Value<T> Value<T>::operator+(const Value<T> &other) const {
