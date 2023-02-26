@@ -10,6 +10,8 @@ int main() {
     // define the neural network
     auto n = MLP<TYPE, INPUTS>(INPUTS, {4, 4, 1});
 
+    // std::cout << n; // to output the network shape
+
     std::vector<std::vector<Value<TYPE>>> xs = {{2.0, 3.0, -1.0},
                                                 {3.0, -1.0, 0.5},
                                                 {0.5, 1.0, 1.0},
@@ -18,14 +20,14 @@ int main() {
     // desired target
     std::vector<Value<TYPE>> ys = {1.0, -1.0, -1.0, 1.0};
 
-    std::vector<std::vector<Value<TYPE>>> ypred;
+    std::vector<Value<TYPE>> ypred;
 
-    for (auto& x : xs) {
-        ypred.emplace_back(n(x));
+    // Run the 4 different example through the network
+    for(size_t i = 0; i < 4 ; i++){
+        ypred.emplace_back(n(xs[i])[0]);
     }
 
     for (auto &value : ypred) {
-        std::cout << value[0] << '\n';
-        value[0].draw_graph();
+        std::cout << value << '\n';
     }
 }
