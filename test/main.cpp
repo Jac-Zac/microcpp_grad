@@ -5,21 +5,27 @@
 typedef double TYPE;
 
 int main() {
-    // define the neural network
-    auto n = MLP<TYPE, INPUTS>(INPUTS, {5,4});
+    // Binary classification
 
-    std::vector<std::vector<Value<TYPE>>> xs = {{2.0, 3.0, -1.0}, {3.0, -1.0, 0.5}, {0.5,1.0, 1.0,}, {1.0, 1.0, -1.0 }};
+    // define the neural network
+    auto n = MLP<TYPE, INPUTS>(INPUTS, {4, 4, 1});
+
+    std::vector<std::vector<Value<TYPE>>> xs = {{2.0, 3.0, -1.0},
+                                                {3.0, -1.0, 0.5},
+                                                {0.5, 1.0, 1.0},
+                                                {1.0, 1.0, -1.0}};
 
     // desired target
     std::vector<Value<TYPE>> ys = {1.0, -1.0, -1.0, 1.0};
 
-    std::vector<Value<TYPE>> ypred;
+    std::vector<std::vector<Value<TYPE>>> ypred;
 
-    for (std::vector<Value<TYPE>> x : xs){
+    for (auto& x : xs) {
         ypred.emplace_back(n(x));
     }
 
-    for (auto& results : ypred){
-        std::cout<< results << '\n';
+    for (auto &value : ypred) {
+        std::cout << value[0] << '\n';
+        value[0].draw_graph();
     }
 }
