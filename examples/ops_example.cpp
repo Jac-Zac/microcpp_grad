@@ -52,7 +52,7 @@ int main() {
     c = mid + (mid + 1);
     auto mid2 = c;
     mid2.label = "mid2";
-    c = mid2 + ((c - a) + 1);
+    c = mid2 + ((mid2 - a) + 1);
     /* d += d * 2 + (b + a).relu(); */
     /* d += 3 * d + (b - a).relu(); */
     d.label = "d";
