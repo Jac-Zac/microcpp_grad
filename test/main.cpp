@@ -46,5 +46,5 @@ int main() {
 
     std::cout << n.m_layers[0].m_neurons[0].m_weights[0] << '\n';
 
-    loss.draw_graph();
+    /* loss.draw_graph(); */
 }

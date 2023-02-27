@@ -56,8 +56,8 @@ int main() {
 
 ### TODO
 
-- Idea on how do draw the graph
+- I have to fix neural network debugging from single neuron
+
+- += would still be nice
 
 - Think of a better way to write the autograd engine. And also stack based topo_sort
-
-- Till `d` I'm fine

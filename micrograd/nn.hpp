@@ -32,8 +32,7 @@ public:
     // Save the return value so that I can draw the graph
     std::vector<Value<T>> m_weights;
     // weighted_sum already initialized with the bias
-    Value<T> m_weighted_sum = Value<T>(0);
-    Value<T> bias = Value<T>(random_uniform(-1.0, 1.0));
+    Value<T> m_weighted_sum = Value<T>(random_uniform(-1.0, 1.0));
 };
 
 // ---------------------------------------------------------
@@ -84,11 +83,10 @@ Neuron<T>::Neuron(size_t number_of_neurons_input)
 template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> x) {
 
     // Sum over all multiplies
+    auto tmp = m_weighted_sum;
     for (size_t i = 0; i < m_num_neurons_input; i++) {
-        m_weighted_sum += (m_weights[i] * x[i]);
+        m_weighted_sum = tmp + (m_weights[i] * x[i]);
     }
-
-    m_weighted_sum += bias;
 
     // Return the activation value of the neuron as a value object
     return (m_weighted_sum.tanh());
