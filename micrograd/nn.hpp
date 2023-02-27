@@ -85,7 +85,7 @@ template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> x) {
 
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
-        m_weighted_sum +=  (m_weights[i] * x[i]);
+        m_weighted_sum += (m_weights[i] * x[i]);
     }
 
     m_weighted_sum += bias;

@@ -33,6 +33,7 @@ public:
     std::string label; // label of the value
     T data;            // data of the value
     T grad;            // gradient which by default is zero
+    bool m_is_first;
 
 protected:
     char m_op;
@@ -40,53 +41,38 @@ protected:
     std::vector<Value<T> *>
         m_sorted_values; // vector to store the sorted values
     std::unordered_set<Value<T> *> m_visited; // keep track of the visited nodes
-
 public:
     // Constructor
-    Value(T data, std::string label = "", char op = ' ');
+    Value(T data, std::string label = "", char op = ' ',
+          std::array<Value<T> *, 2> children = {nullptr, nullptr});
 
     // Operator Overloading
     // lvalues and rvalues because of const reference
-
-    // Operator Overloading
     friend Value operator+(const Value &lhs, const Value &rhs) {
-        Value result(lhs.data + rhs.data, "", SUM);
-        result.m_prev[0] = const_cast<Value *>(&lhs);
-        result.m_prev[1] = const_cast<Value *>(&rhs);
-        return result;
+        bool is_first = lhs.m_is_first && rhs.m_is_first;
+        return Value(lhs.data + rhs.data, "", SUM,
+                     {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
     }
 
     friend Value operator-(const Value &lhs, const Value &rhs) {
-        Value result(lhs.data - rhs.data, "", DIF);
-        result.m_prev[0] = const_cast<Value *>(&lhs);
-        result.m_prev[1] = const_cast<Value *>(&rhs);
-        return result;
+        return Value(lhs.data - rhs.data, "", DIF,
+                     {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
     }
 
     friend Value operator*(const Value &lhs, const Value &rhs) {
-        Value result(lhs.data * rhs.data, "", MUL);
-        result.m_prev[0] = const_cast<Value *>(&lhs);
-        result.m_prev[1] = const_cast<Value *>(&rhs);
-        return result;
+        return Value(lhs.data * rhs.data, "", MUL,
+                     {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
     }
 
     friend Value operator/(const Value &lhs, const Value &rhs) {
-        Value result(lhs.data / rhs.data, "", DIV);
-        result.m_prev[0] = const_cast<Value *>(&lhs);
-        result.m_prev[1] = const_cast<Value *>(&rhs);
-        return result;
+        return Value(lhs.data / rhs.data, "", DIV,
+                     {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
     }
 
     friend Value operator^(const Value &lhs, const Value &rhs) {
-        Value result(pow(lhs.data, rhs.data), "", POW);
-        result.m_prev[0] = const_cast<Value *>(&lhs);
-        result.m_prev[1] = const_cast<Value *>(&rhs);
-        return result;
+        return Value(pow(lhs.data, rhs.data), "", POW,
+                     {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
     }
-
-
-    Value<T>& operator+=(const Value<T>& rhs);
-    Value<T>& operator*=(const Value<T>& rhs);
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -94,6 +80,9 @@ public:
            << ", label=" << v.label << ")";
         return os;
     };
+
+    Value<T> &operator+=(const Value<T>& rhs);
+    Value<T> &operator*=(const Value<T> &rhs);
 
     // Other ops
     Value<T> inverse_value();
@@ -115,62 +104,44 @@ protected:
 // ==================== Implementation =====================
 
 template <typename T>
-Value<T>::Value(T data, std::string label, char op)
-    : data(data), label(label), m_op(op), grad(0.0),
-      m_prev({nullptr, nullptr}) {}
+Value<T>::Value(T data, std::string label, char op,
+                std::array<Value<T> *, 2> children)
+    : data(data), label(label), m_op(op), m_prev(std::move(children)),
+      grad(0.0), m_is_first(true) {}
 
 template <typename T>
 Value<T>& Value<T>::operator+=(const Value<T>& rhs) {
-
-    // I assume this is a sum and that might not be the case
-    data += rhs.data;
-
-    this->m_prev[0] = this;
-    this->m_prev[1] = const_cast<Value<T>*>(&rhs);
-
-    // Return a reference to the current object
+    this->data += rhs.data;
+    bool is_first = this->m_is_first && rhs.m_is_first;
+    this->m_op = SUM;
+    this->m_prev = {const_cast<Value<T>*>(&*this), const_cast<Value<T>*>(&rhs)};
+    this->m_is_first = is_first;
     return *this;
 }
 
-template <typename T>
-Value<T>& Value<T>::operator*=(const Value<T>& rhs) {
+template <typename T> Value<T> &Value<T>::operator*=(const Value<T> &rhs) {
+    this->m_prev[0] = this;
+    this->m_prev[1] = const_cast<Value<T> *>(&rhs);
 
     data *= rhs.data;
-
-    this->m_prev[0] = this;
-    this->m_prev[1] = const_cast<Value<T>*>(&rhs);
-
     // Return a reference to the current object
     return *this;
 }
 
 template <typename T> Value<T> Value<T>::inverse_value() {
-    Value<T> result(1 / data, "", INV);
-    result.m_prev[0] = this;
-    result.m_prev[1] = nullptr;
-    return result;
+    return Value<T>(1 / data, "", INV, {this, nullptr});
 }
 
 template <typename T> Value<T> Value<T>::exp_value() {
-    Value<T> result(exp(data), "", EXP);
-    result.m_prev[0] = this;
-    result.m_prev[1] = nullptr;
-    return result;
+    return Value<T>(exp(data), "", EXP, {this, nullptr});
 }
 
 template <typename T> Value<T> Value<T>::tanh() {
-    Value<T> result(std::tanh(data), "", TANH);
-    result.m_prev[0] = this;
-    result.m_prev[1] = nullptr;
-    return result;
+    return Value<T>(std::tanh(data), "", TANH, {this, nullptr});
 }
 
 template <typename T> Value<T> Value<T>::relu() {
-    T relu = data < 0 ? 0 : data;
-    Value<T> result(relu, "", RELU);
-    result.m_prev[0] = this;
-    result.m_prev[1] = nullptr;
-    return result;
+    return Value<T>(data < 0 ? 0 : data, "", RELU, {this, nullptr});
 }
 
 template <typename T> void Value<T>::_backward_single() {

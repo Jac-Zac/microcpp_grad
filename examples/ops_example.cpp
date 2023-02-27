@@ -48,18 +48,18 @@ int main() {
     auto d = a * b + (b ^ 3);
     auto mid = c;
     mid.label = "mid";
-    c += (mid * 2);
-    c.label = "c";
+    // c = mid + mid;
+    c += mid;
     /* d += d * 2 + (b + a).relu(); */
     /* d += 3 * d + (b - a).relu(); */
-    d.label ="d";
+    d.label = "d";
     auto e = c - d;
     e.label = "e";
     auto f = e ^ 2;
     f.label = "f";
     auto g = (f / 2.0);
     g.label = "g";
-//    g += (f.inverse_value() * 10);
+    //    g += (f.inverse_value() * 10);
     g.backward();
     g.draw_graph();
     std::cout << g << '\n';
