@@ -86,6 +86,7 @@ public:
 
 
     Value<T>& operator+=(const Value<T>& rhs);
+    Value<T>& operator*=(const Value<T>& rhs);
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -121,7 +122,20 @@ Value<T>::Value(T data, std::string label, char op)
 template <typename T>
 Value<T>& Value<T>::operator+=(const Value<T>& rhs) {
 
-    *this = *this + rhs.data;
+    data += rhs.data;
+
+    this->m_prev[0] = this;
+    this->m_prev[1] = const_cast<Value<T>*>(&rhs);
+
+    // Return a reference to the current object
+    return *this;
+}
+
+template <typename T>
+Value<T>& Value<T>::operator*=(const Value<T>& rhs) {
+
+    data *= rhs.data;
+
     this->m_prev[0] = this;
     this->m_prev[1] = const_cast<Value<T>*>(&rhs);
 

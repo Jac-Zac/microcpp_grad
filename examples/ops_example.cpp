@@ -48,10 +48,9 @@ int main() {
     auto d = a * b + (b ^ 3);
     auto mid = c;
     mid.label = "mid";
-    c += mid;
+    c += (mid + 1);
     c.label = "c";
-    /* c += 1; */
-    /* c += 1 + c + (-a); */
+
     /* d += d * 2 + (b + a).relu(); */
     /* d += 3 * d + (b - a).relu(); */
     d.label ="d";
@@ -64,7 +63,6 @@ int main() {
 //    g += (f.inverse_value() * 10);
     g.backward();
     g.draw_graph();
-    std::cout << mid << '\n';
     std::cout << g << '\n';
     std::cout << a << '\n';
     std::cout << b << '\n';
