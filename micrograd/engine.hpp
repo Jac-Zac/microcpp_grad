@@ -160,7 +160,7 @@ template <typename T> void Value<T>::_backward_single() {
         m_prev[0]->_update_grad((1 - pow(data, 2)) * grad);
         break;
     case RELU:
-        m_prev[0]->_update_grad(data > 0 ? 1 : 0);
+        m_prev[0]->_update_grad(data > 0 ? (1 * grad) : 0);
         break;
     default:
         break;
