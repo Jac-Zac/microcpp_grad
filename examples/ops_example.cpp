@@ -53,9 +53,9 @@ int main() {
     auto mid2 = c;
     mid2.label = "mid2";
     c = mid2 + ((mid2 - a) + 1);
-    /* auto tmp1 = d; */
-    /* tmp1.label = "tmp1"; */
-    /* d = tmp1 + ((tmp1 * 2) + (b + a).relu()); */
+    auto tmp1 = d;
+    tmp1.label = "tmp1";
+    d = tmp1 + ((tmp1 * 2) + (b + a).relu());
     auto tmp2 = d;
     tmp2.label = "tmp2";
     d = tmp2 + (3 * tmp2 + (b - a).relu());
