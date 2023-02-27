@@ -77,10 +77,8 @@ public:
         return result;
     }
 
-    Value &operator+=(const Value &rhs) {
-        *this = *this + rhs;
-        return *this;
-    }
+
+    Value<T>& operator+=(const Value<T> &rhs);
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -118,6 +116,13 @@ template <typename T>
 Value<T>::Value(T data, std::string label, char op)
     : data(data), label(label), m_op(op), grad(0.0),
       m_prev({nullptr, nullptr}) {}
+
+template <typename T>
+Value<T>& Value<T>::operator+=(const Value<T>& rhs) {
+    data += rhs.data;
+    grad += rhs.grad;
+    return *this;
+}
 
 template <typename T> Value<T> Value<T>::inverse_value() {
     Value<T> result = Value<T>(1 / data, "", INV);
