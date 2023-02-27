@@ -122,6 +122,7 @@ Value<T>::Value(T data, std::string label, char op)
 template <typename T>
 Value<T>& Value<T>::operator+=(const Value<T>& rhs) {
 
+    // I assume this is a sum and that might not be the case
     data += rhs.data;
 
     this->m_prev[0] = this;
