@@ -48,8 +48,11 @@ int main() {
     auto d = a * b + (b ^ 3);
     auto mid = c;
     mid.label = "mid";
-    // c = mid + mid;
-    c += mid;
+    c.label = "c";
+    c = mid + (mid + 1);
+    auto mid2 = c;
+    mid2.label = "mid2";
+    c = mid2 + ((c - a) + 1);
     /* d += d * 2 + (b + a).relu(); */
     /* d += 3 * d + (b - a).relu(); */
     d.label = "d";
