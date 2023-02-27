@@ -59,3 +59,5 @@ int main() {
 - Idea on how do draw the graph
 
 - Think of a better way to write the autograd engine. And also stack based topo_sort
+
+- Till `d` I'm fine

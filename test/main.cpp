@@ -26,10 +26,9 @@ int main() {
         ypred.emplace_back(n(xs[0])[i]);
     }
 
-    for (auto &value : ypred) {
-        /* std::cout << value << '\n'; */
-        value.draw_graph();
-    }
+    /* for (auto &value : ypred) { */
+    /*     std::cout << value << '\n'; */
+    /* } */
 
     Value<TYPE> loss = Value<TYPE>(0, "loss");
 
@@ -38,7 +37,7 @@ int main() {
     for (size_t i = 0; i < 4; i++) {
         // Mean Squared Error
         tmp = (ypred[i] - ys[i]);
-        loss = loss + (tmp ^ 2);
+        loss += ((ypred[i] - ys[i]) ^ 2);
     }
 
     std::cout << n.m_layers[0].m_neurons[0].m_weights[0] << '\n';
@@ -47,7 +46,7 @@ int main() {
 
     std::cout << loss << '\n';
 
-    loss.draw_graph();
-
     std::cout << n.m_layers[0].m_neurons[0].m_weights[0] << '\n';
+
+    loss.draw_graph();
 }

@@ -85,10 +85,10 @@ template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> x) {
 
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
-        m_weighted_sum = m_weighted_sum + (m_weights[i] * x[i]);
+        m_weighted_sum +=  (m_weights[i] * x[i]);
     }
 
-    m_weighted_sum = m_weighted_sum + bias;
+    m_weighted_sum += bias;
 
     // Return the activation value of the neuron as a value object
     return (m_weighted_sum.tanh());
@@ -108,7 +108,7 @@ std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> x) {
 
     // Iterate over the m_neurons
     for (auto &neuron : m_neurons) {
-        m_neurons_output.emplace_back(Neuron<T>(neuron(x)));
+        m_neurons_output.emplace_back(neuron(x));
     }
     return m_neurons_output;
 }

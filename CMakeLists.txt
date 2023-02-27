@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(test CXX)
+project(micrograd CXX)
 
 set(CMAKE_CROSSCOMPILING "True")
 

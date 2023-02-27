@@ -41,11 +41,11 @@ public:
     // lvalues and rvalues because of const reference
 
     // Operator Overloading
-    // Operator Overloading
     friend Value operator+(const Value &lhs, const Value &rhs) {
         Value result(lhs.data + rhs.data, "", SUM);
         result.m_prev[0] = const_cast<Value *>(&lhs);
         result.m_prev[1] = const_cast<Value *>(&rhs);
+        result.m_is_sum = true;
         return result;
     }
 
@@ -71,7 +71,7 @@ public:
     }
 
     friend Value operator^(const Value &lhs, const Value &rhs) {
-        Value result(pow(lhs.data, rhs.data), "", DIV);
+        Value result(pow(lhs.data, rhs.data), "", POW);
         result.m_prev[0] = const_cast<Value *>(&lhs);
         result.m_prev[1] = const_cast<Value *>(&rhs);
         return result;
@@ -79,6 +79,7 @@ public:
 
 
     Value<T>& operator+=(const Value<T> &rhs);
+    Value<T>& operator*=(const Value<T> &rhs);
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -102,6 +103,8 @@ protected:
     std::vector<Value<T> *>
         m_sorted_values; // vector to store the sorted values
     std::unordered_set<Value<T> *> m_visited; // keep track of the visited nodes
+    bool m_is_sum = false; // variable to avoid computing the gradient twice
+
 protected:
     // Helper function to make a topological sort
     void _topo_sort(Value<T> *v);
@@ -119,8 +122,23 @@ Value<T>::Value(T data, std::string label, char op)
 
 template <typename T>
 Value<T>& Value<T>::operator+=(const Value<T>& rhs) {
+    if (m_is_sum) {
+        m_prev[0] = this;
+        m_prev[1] = const_cast<Value<T>*>(&rhs);
+    } else {
+        m_prev[1] = const_cast<Value<T>*>(&rhs);
+        m_is_sum = true;
+    }
     data += rhs.data;
-    grad += rhs.grad;
+    return *this;
+}
+
+template <typename T>
+Value<T>& Value<T>::operator*=(const Value<T>& rhs) {
+    data *= rhs.data;
+    // Update the right and left gradients correctly
+    grad += grad * rhs.data;
+    rhs.grad = grad * data;
     return *this;
 }
 
