@@ -33,6 +33,14 @@ public:
     std::string label; // label of the value
     T data;            // data of the value
     T grad;            // gradient which by default is zero
+
+protected:
+    char m_op;
+    std::array<Value<T> *, 2> m_prev; // previous values
+    std::vector<Value<T> *>
+        m_sorted_values; // vector to store the sorted values
+    std::unordered_set<Value<T> *> m_visited; // keep track of the visited nodes
+
 public:
     // Constructor
     Value(T data, std::string label = "", char op = ' ');
@@ -45,7 +53,6 @@ public:
         Value result(lhs.data + rhs.data, "", SUM);
         result.m_prev[0] = const_cast<Value *>(&lhs);
         result.m_prev[1] = const_cast<Value *>(&rhs);
-        result.m_is_sum = true;
         return result;
     }
 
@@ -78,8 +85,7 @@ public:
     }
 
 
-    Value<T>& operator+=(const Value<T> &rhs);
-    Value<T>& operator*=(const Value<T> &rhs);
+    Value<T>& operator+=(const Value<T>& rhs);
 
     // << operator overload
     friend std::ostream &operator<<(std::ostream &os, const Value<T> &v) {
@@ -98,14 +104,6 @@ public:
     void draw_graph();
 
 protected:
-    char m_op;
-    std::array<Value<T> *, 2> m_prev; // previous values
-    std::vector<Value<T> *>
-        m_sorted_values; // vector to store the sorted values
-    std::unordered_set<Value<T> *> m_visited; // keep track of the visited nodes
-    bool m_is_sum = false; // variable to avoid computing the gradient twice
-
-protected:
     // Helper function to make a topological sort
     void _topo_sort(Value<T> *v);
     void _backward_single(); // 1 step of backdrop
@@ -122,42 +120,31 @@ Value<T>::Value(T data, std::string label, char op)
 
 template <typename T>
 Value<T>& Value<T>::operator+=(const Value<T>& rhs) {
-    if (m_is_sum) {
-        m_prev[0] = this;
-        m_prev[1] = const_cast<Value<T>*>(&rhs);
-    } else {
-        m_prev[1] = const_cast<Value<T>*>(&rhs);
-        m_is_sum = true;
-    }
-    data += rhs.data;
-    return *this;
-}
 
-template <typename T>
-Value<T>& Value<T>::operator*=(const Value<T>& rhs) {
-    data *= rhs.data;
-    // Update the right and left gradients correctly
-    grad += grad * rhs.data;
-    rhs.grad = grad * data;
+    *this = *this + rhs.data;
+    this->m_prev[0] = this;
+    this->m_prev[1] = const_cast<Value<T>*>(&rhs);
+
+    // Return a reference to the current object
     return *this;
 }
 
 template <typename T> Value<T> Value<T>::inverse_value() {
-    Value<T> result = Value<T>(1 / data, "", INV);
+    Value<T> result(1 / data, "", INV);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
     return result;
 }
 
 template <typename T> Value<T> Value<T>::exp_value() {
-    Value<T> result = Value<T>(exp(data), "", EXP);
+    Value<T> result(exp(data), "", EXP);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
     return result;
 }
 
 template <typename T> Value<T> Value<T>::tanh() {
-    Value<T> result = Value<T>(std::tanh(data), "", TANH);
+    Value<T> result(std::tanh(data), "", TANH);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
     return result;
@@ -165,7 +152,7 @@ template <typename T> Value<T> Value<T>::tanh() {
 
 template <typename T> Value<T> Value<T>::relu() {
     T relu = data < 0 ? 0 : data;
-    Value<T> result = Value<T>(relu, "", RELU);
+    Value<T> result(relu, "", RELU);
     result.m_prev[0] = this;
     result.m_prev[1] = nullptr;
     return result;

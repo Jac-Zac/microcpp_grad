@@ -64,7 +64,7 @@ int main() {
 //    g += (f.inverse_value() * 10);
     g.backward();
     g.draw_graph();
-    std::cout << mid;
+    std::cout << mid << '\n';
     std::cout << g << '\n';
     std::cout << a << '\n';
     std::cout << b << '\n';
