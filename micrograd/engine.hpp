@@ -46,7 +46,7 @@ public:
     Value(T data, std::string label = "", char op = ' ',
           std::array<Value<T> *, 2> children = {nullptr, nullptr})
         : data(data), label(label), m_op(op), m_prev(std::move(children)),
-      grad(0.0), m_is_first(true) {}
+          grad(0.0), m_is_first(true) {}
 
     // Operator Overloading
     // lvalues and rvalues because of const reference
@@ -102,8 +102,9 @@ protected:
 
 // ==================== Implementation =====================
 
-template <typename T> Value<T> Value<T>::inverse_value() {
-    return Value<T>(1 / data, "", INV, {this, nullptr});
+template <typename T>
+Value<T> Value<T>::inverse_value() {
+    return Value(1.0 / this->data, "", INV, {const_cast<Value<T>*>(this), nullptr});
 }
 
 template <typename T> Value<T> Value<T>::exp_value() {
@@ -123,7 +124,7 @@ template <typename T> void Value<T>::_backward_single() {
     case SUM:
         // Should just move the gradient along to both of them
         // += because we want to avoid bugs if we reuse a variable
-        if(m_is_first){
+        if (m_is_first) {
             m_prev[0]->_update_grad(this->grad);
             m_prev[1]->_update_grad(this->grad);
         }
@@ -150,7 +151,7 @@ template <typename T> void Value<T>::_backward_single() {
         break;
     case INV:
         // e^x is e^x which I already saved in data
-        m_prev[0]->_update_grad(-1 / pow(m_prev[0]->data, 2));
+        m_prev[0]->_update_grad(-1 / pow(m_prev[0]->data, 2) * grad);
         break;
     case EXP:
         // e^x is e^x which I already saved in data

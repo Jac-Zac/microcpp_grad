@@ -66,7 +66,8 @@ int main() {
     f.label = "f";
     auto g = (f / 2.0);
     g.label = "g";
-    //    g += (f.inverse_value() * 10);
+    auto fin = g;
+    g = fin + (f.inverse_value() * 10);
     g.backward();
     g.draw_graph();
     std::cout << g << '\n';
