@@ -102,9 +102,9 @@ protected:
 
 // ==================== Implementation =====================
 
-template <typename T>
-Value<T> Value<T>::inverse_value() {
-    return Value(1.0 / this->data, "", INV, {const_cast<Value<T>*>(this), nullptr});
+template <typename T> Value<T> Value<T>::inverse_value() {
+    return Value(1.0 / this->data, "", INV,
+                 {const_cast<Value<T> *>(this), nullptr});
 }
 
 template <typename T> Value<T> Value<T>::exp_value() {
