@@ -45,7 +45,7 @@ public:
     Value(T data, std::string label = "", char op = ' ',
           std::array<Value<T> *, 2> children = {nullptr, nullptr})
         : data(data), label(label), m_op(op), m_prev(std::move(children)),
-          grad(0.0){}
+          grad(0.0) {}
 
     // Operator Overloading
     // lvalues and rvalues because of const reference
@@ -74,10 +74,9 @@ public:
                      {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
     }
 
-    friend Value& operator+=(Value& lhs, const Value& rhs) {
-        Value<T>* rhs_copy = new Value(rhs.data, "rhs_copy", rhs.m_op , lhs.m_prev);
-        Value<T>* tmp1 = new Value(lhs.data, "tmp first pointer", lhs.m_op, lhs.m_prev);
-        Value<T>* tmp2 = new Value(rhs_copy->data, "tmp second pointer", rhs_copy->m_op, rhs.m_prev);
+    friend Value &operator+=(Value &lhs, const Value &rhs) {
+        Value<T> *tmp1 = new Value(lhs.data, "", lhs.m_op, lhs.m_prev);
+        Value<T> *tmp2 = new Value(rhs.data, "", rhs.m_op, rhs.m_prev);
 
         lhs = (*tmp1 + *tmp2);
 
@@ -109,12 +108,9 @@ protected:
 };
 
 // ==================== Implementation =====================
-        /* lhs.m_prev = tmp_prev; */
-
 
 template <typename T> Value<T> Value<T>::inverse_value() {
-    return Value(1.0 / this->data, "", INV,
-                 {this, nullptr});
+    return Value(1.0 / this->data, "", INV, {this, nullptr});
 }
 
 template <typename T> Value<T> Value<T>::exp_value() {
