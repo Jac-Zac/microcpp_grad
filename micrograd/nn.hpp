@@ -71,7 +71,7 @@ public:
 public:
     std::vector<Layer<T>> m_layers;
     // Layer given in output
-    std::vector<Value<T>> layer_output;
+    std::vector<std::vector<Value<T>>> m_single_layer_output;
 };
 
 //  ================ Implementation  Neuron =================
@@ -140,19 +140,19 @@ std::variant<std::vector<Value<T>>, Value<T>>
 MLP<T, N>::operator()(std::vector<Value<T>> &x) {
 
     // Set the current layer to the given values
-    layer_output = x;
+    m_single_layer_output.emplace_back(x);
 
-    // Iterate over the layer and call the output of the layer onto the next one
-    for (auto &layer : m_layers) {
-        layer_output = layer(layer_output);
+    // Iterate over the layer from the second one to the N + 1 layer
+    for (size_t i = 1 ; i <= N; i++){
+        m_single_layer_output.emplace_back(m_layers[i - 1](m_single_layer_output[i -1]));
     }
 
     // Return a Value<T> if it is just one and else return the array of values
-    if (layer_output.size() == 1) {
-        return layer_output[0];
-    } else {
-        return layer_output;
+    if (m_single_layer_output[N].size() == 1) {
+        return m_single_layer_output[N][0];
     }
+
+    return m_single_layer_output[N];
 }
 
 // Overloading for the output to standard out ---------------------------
