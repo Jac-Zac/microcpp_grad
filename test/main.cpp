@@ -9,12 +9,31 @@ typedef double TYPE;
 #ifdef NEURON
 
 int main() {
-    auto n = Neuron<TYPE>(2);
-    std::vector<Value<TYPE>> x = {Value<TYPE>(1.0, "first_value"),
-                                  Value<TYPE>(-2.0, "second_value")};
+    /// Initialize the neural network
+    /* auto n = MLP<TYPE, INPUTS> (3, {4,4,1}); */
+    auto n = Layer<TYPE>(3, 2);
+
+    std::vector<Value<TYPE>> x = {
+        Value<TYPE>(2.0, "first_value"),
+        Value<TYPE>(3.0, "second_value"),
+        Value<TYPE>(-1.0, "third_value"),
+    };
+
+    /*
+    // auto will be an std::variant
     auto y = n(x);
-    y.backward();
-    y.draw_graph();
+
+    std::get<Value<TYPE>>(y).backward();
+    std::get<Value<TYPE>>(y).draw_graph();
+    */
+
+    auto y = n(x);
+
+    for (auto &value : y) {
+        value.backward();
+    }
+
+    y[0].draw_graph();
 }
 
 #else

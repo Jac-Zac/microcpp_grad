@@ -7,6 +7,7 @@
 #pragma once
 #include "engine.hpp"
 #include <random>
+#include <variant>
 
 template <typename T> T random_uniform(T range_from, T range_to) {
     std::random_device rand_dev;
@@ -44,6 +45,7 @@ public:
     std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
 
 public:
+    // Create the neurons for the layer
     std::vector<Neuron<T>> m_neurons;
     // Create an array of neurons to return
     std::vector<Value<T>> m_neurons_output;
@@ -56,7 +58,8 @@ public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
+    std::variant<std::vector<Value<T>>, Value<T>>
+    operator()(std::vector<Value<T>> &x);
 
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
@@ -67,6 +70,8 @@ public:
 
 public:
     std::vector<Layer<T>> m_layers;
+    // Layer given in output
+    std::vector<Value<T>> layer_output;
 };
 
 //  ================ Implementation  Neuron =================
@@ -95,6 +100,7 @@ template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
 
 template <typename T>
 Layer<T>::Layer(size_t num_neurons_input, size_t num_neurons_output) {
+    // Add all the neurons to the layer by crating them
     for (size_t i = 0; i < num_neurons_output; i++) {
         m_neurons.emplace_back(Neuron<T>(num_neurons_input));
     }
@@ -130,15 +136,23 @@ MLP<T, N>::MLP(size_t num_neurons_input,
 }
 
 template <typename T, size_t N>
-std::vector<Value<T>> MLP<T, N>::operator()(std::vector<Value<T>> &x) {
+std::variant<std::vector<Value<T>>, Value<T>>
+MLP<T, N>::operator()(std::vector<Value<T>> &x) {
 
-    std::vector<Value<T>> layer_output = x;
+    // Set the current layer to the given values
+    layer_output = x;
 
-    for (Layer<T> layer : m_layers) {
+    // Iterate over the layer and call the output of the layer onto the next one
+    for (auto &layer : m_layers) {
         layer_output = layer(layer_output);
     }
 
-    return layer_output;
+    // Return a Value<T> if it is just one and else return the array of values
+    if (layer_output.size() == 1) {
+        return layer_output[0];
+    } else {
+        return layer_output;
+    }
 }
 
 // Overloading for the output to standard out ---------------------------
