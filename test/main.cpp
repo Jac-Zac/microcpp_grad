@@ -4,6 +4,21 @@
 
 typedef double TYPE;
 
+#define NEURON
+
+#ifdef NEURON
+
+int main() {
+    auto n = Neuron<TYPE>(2);
+    std::vector<Value<TYPE>> x = {Value<TYPE>(1.0, "first_value"),
+                                  Value<TYPE>(-2.0, "second_value")};
+    auto y = n(x);
+    y.backward();
+    y.draw_graph();
+}
+
+#else
+
 int main() {
     // Binary classification
 
@@ -31,11 +46,10 @@ int main() {
     /* } */
 
     auto loss = Value<TYPE>(0, "loss");
-    auto tmp = loss;
 
     for (size_t i = 0; i < 4; i++) {
         // Mean Squared Error
-        loss = tmp + ((ypred[i] - ys[i]) ^ 2);
+        loss += (ypred[i] - ys[i]) ^ 2;
     }
 
     std::cout << n.m_layers[0].m_neurons[0].m_weights[0] << '\n';
@@ -48,3 +62,5 @@ int main() {
 
     /* loss.draw_graph(); */
 }
+
+#endif
