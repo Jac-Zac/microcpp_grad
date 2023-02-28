@@ -75,8 +75,9 @@ public:
     }
 
     friend Value& operator+=(Value& lhs, const Value& rhs) {
-        Value<T>* tmp1 = new Value(lhs.data, "tmp first pointer", SUM, lhs.m_prev);
-        Value<T>* tmp2 = new Value(rhs.data, "tmp second pointer", SUM, rhs.m_prev);
+        Value<T>* rhs_copy = new Value(rhs.data, "rhs_copy", rhs.m_op , lhs.m_prev);
+        Value<T>* tmp1 = new Value(lhs.data, "tmp first pointer", lhs.m_op, lhs.m_prev);
+        Value<T>* tmp2 = new Value(rhs_copy->data, "tmp second pointer", rhs_copy->m_op, rhs.m_prev);
 
         lhs = (*tmp1 + *tmp2);
 
