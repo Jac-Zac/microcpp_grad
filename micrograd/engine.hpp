@@ -33,7 +33,6 @@ public:
     std::string label; // label of the value
     T data;            // data of the value
     T grad;            // gradient which by default is zero
-    bool m_is_first;
 
 protected:
     char m_op;
@@ -46,12 +45,11 @@ public:
     Value(T data, std::string label = "", char op = ' ',
           std::array<Value<T> *, 2> children = {nullptr, nullptr})
         : data(data), label(label), m_op(op), m_prev(std::move(children)),
-          grad(0.0), m_is_first(true) {}
+          grad(0.0){}
 
     // Operator Overloading
     // lvalues and rvalues because of const reference
     friend Value operator+(const Value &lhs, const Value &rhs) {
-        bool is_first = lhs.m_is_first && rhs.m_is_first;
         return Value(lhs.data + rhs.data, "", SUM,
                      {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
     }
@@ -74,6 +72,15 @@ public:
     friend Value operator^(const Value &lhs, const Value &rhs) {
         return Value(pow(lhs.data, rhs.data), "", POW,
                      {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
+    }
+
+    friend Value& operator+=(Value& lhs, const Value& rhs) {
+        Value<T>* tmp1 = new Value(lhs.data, "tmp first pointer", SUM, lhs.m_prev);
+        Value<T>* tmp2 = new Value(rhs.data, "tmp second pointer", SUM, rhs.m_prev);
+
+        lhs = (*tmp1 + *tmp2);
+
+        return lhs;
     }
 
     // << operator overload
@@ -101,10 +108,12 @@ protected:
 };
 
 // ==================== Implementation =====================
+        /* lhs.m_prev = tmp_prev; */
+
 
 template <typename T> Value<T> Value<T>::inverse_value() {
     return Value(1.0 / this->data, "", INV,
-                 {const_cast<Value<T> *>(this), nullptr});
+                 {this, nullptr});
 }
 
 template <typename T> Value<T> Value<T>::exp_value() {
@@ -124,10 +133,8 @@ template <typename T> void Value<T>::_backward_single() {
     case SUM:
         // Should just move the gradient along to both of them
         // += because we want to avoid bugs if we reuse a variable
-        if (m_is_first) {
-            m_prev[0]->_update_grad(this->grad);
-            m_prev[1]->_update_grad(this->grad);
-        }
+        m_prev[0]->_update_grad(this->grad);
+        m_prev[1]->_update_grad(this->grad);
         break;
     case DIF:
         // same as m_prev[0] += 1.0 * grad;
