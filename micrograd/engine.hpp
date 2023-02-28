@@ -247,7 +247,7 @@ template <typename T> void Value<T>::draw_graph() {
 
     // Create the graph using the dot command
     // std::system("dot -Tpng graph.dot -Gdpi=300 -o graph.png");
-    std::system("dot -Tpng graph.dot -Gdpi=50 -o graph.png");
+    std::system("dot -Tpng graph.dot -Gdpi=100 -o graph.png");
     // Open the graph using the default viewer
     std::system("open graph.png");
 }

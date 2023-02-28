@@ -143,8 +143,9 @@ MLP<T, N>::operator()(std::vector<Value<T>> &x) {
     m_single_layer_output.emplace_back(x);
 
     // Iterate over the layer from the second one to the N + 1 layer
-    for (size_t i = 1 ; i <= N; i++){
-        m_single_layer_output.emplace_back(m_layers[i - 1](m_single_layer_output[i -1]));
+    for (size_t i = 1; i <= N; i++) {
+        m_single_layer_output.emplace_back(
+            m_layers[i - 1](m_single_layer_output[i - 1]));
     }
 
     // Return a Value<T> if it is just one and else return the array of values

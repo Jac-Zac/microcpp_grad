@@ -4,13 +4,13 @@
 
 typedef double TYPE;
 
-/* #define NEURON */
+#define NEURON
 
 #ifdef NEURON
 
 int main() {
     /// Initialize the neural network
-    auto n = MLP<TYPE, INPUTS> (3, {4,4,1});
+    auto n = MLP<TYPE, INPUTS>(3, {4, 4, 1});
 
     std::vector<Value<TYPE>> x = {
         Value<TYPE>(2.0, "first_value"),
