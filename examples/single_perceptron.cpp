@@ -1,6 +1,5 @@
 #include "../micrograd/engine.hpp"
 
-/*
 int main() {
     // Creating a single perception
 
@@ -38,4 +37,3 @@ int main() {
     o.backward();
     o.draw_graph();
 }
-*/
