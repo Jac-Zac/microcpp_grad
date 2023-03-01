@@ -4,55 +4,50 @@
 
 typedef double TYPE;
 
-#define NEURON
-// #define NETWORK
-
-#ifdef NEURON
-
 int main() {
     // Three neurons
-    auto neuron = Neuron<TYPE>(3);
+    auto model = MLP<TYPE,INPUTS>(3,{4,4,1});
 
     std::vector<Value<TYPE>> x1 = {
-        Value<TYPE>(2.0, "first_value"),
+        Value<TYPE>(-5.0, "first_value"),
         Value<TYPE>(3.0, "second_value"),
-        Value<TYPE>(-1.0, "third_value"),
+        Value<TYPE>(7.0, "first_value"),
     };
 
     std::vector<Value<TYPE>> x2 = {
-        Value<TYPE>(5.0, "first_value"),
-        Value<TYPE>(-2.0, "second_value"),
-        Value<TYPE>(10.0, "third_value"),
+        Value<TYPE>(3.0, "second_value"),
+        Value<TYPE>(-3.0, "second_value"),
+        Value<TYPE>(2.0, "first_value"),
     };
 
     // Testing the neuron output with two different set of values
-    auto y1 = neuron(x1);
-    y1.backward();
-    neuron.zero_grad();
+    auto y1 = model(x1);
+    y1[4][0].backward();
+    model.zero_grad();
 
-    auto y2 = neuron(x2);
-    y2.backward();
-    /* neuron.zero_grad(); */
+    auto y2 = model(x2);
+    y2[4][0].backward();
+    model.zero_grad();
 
     std::cout << "Outputs:" << '\n';
     std::cout << "-----------------" << '\n';
 
-    std::cout << "First pass: " << y1 << '\n';
+    std::cout << "First pass: " << y1[4][0] << '\n';
     /* // Neuron two should have rest the m_neurons value */
-    std::cout << "Second pass: " << y2 << "\n";
+    std::cout << "Second pass: " << y2[4][0] << "\n";
 
     std::cout << "Parameters: " << '\n';
     std::cout << "-----------------" << '\n';
 
     // Getting the neuron parameters
-    for (auto& p : neuron.parameters()){
+    for (auto& p : model.parameters()){
         std::cout<< *p << "\n";
     }
 
-    y2.draw_graph();
+    y2[4][0].draw_graph();
 }
 
-#elif NETWORK
+#ifdef NETWORK
 
 int main() {
     /// Initialize the neural network
