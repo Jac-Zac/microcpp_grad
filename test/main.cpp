@@ -32,9 +32,7 @@ int main() {
 
     auto y2 = neuron(x2);
     y2.backward();
-    neuron.zero_grad();
-
-    neuron.zero_grad();
+    /* neuron.zero_grad(); */
 
     std::cout << "Outputs:" << '\n';
     std::cout << "-----------------" << '\n';
@@ -48,10 +46,10 @@ int main() {
 
     // Getting the neuron parameters
     for (auto& p : neuron.parameters()){
-        std::cout<< p << "\n";
+        std::cout<< *p << "\n";
     }
 
-    y1.draw_graph();
+    y2.draw_graph();
 }
 
 #elif NETWORK

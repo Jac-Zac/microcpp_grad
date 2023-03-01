@@ -30,12 +30,12 @@ class Module{
 public:
     void zero_grad(){
         for (auto& p: parameters()){
-            p.grad = 0.0;
+            p->grad = 0.0;
         }
     }
 
     // Make it virtual so that it can be override
-    virtual std::vector<Value<T>> parameters(){
+    virtual std::vector<Value<T>*> parameters(){
         return {};
     }
 };
@@ -47,7 +47,7 @@ public:
     // Call operator: w * x + b dot product
     Value<T> operator()(std::vector<Value<T>> &x);
     // Overriding
-    virtual std::vector<Value<T>> parameters() override;
+    virtual std::vector<Value<T>*> parameters() override;
 
 public:
     size_t m_num_neurons_input;
@@ -65,7 +65,7 @@ public:
     // Call operator: w * x + b dot product
     std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
     // Overriding
-    virtual std::vector<Value<T>> parameters() override;
+    virtual std::vector<Value<T>*> parameters() override;
 
 public:
     // Create the neurons for the layer
@@ -85,7 +85,7 @@ public:
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
     // Overriding
-    virtual std::vector<Value<T>> parameters() override;
+    virtual std::vector<Value<T>&> parameters() override;
 
 public:
     const size_t m_num_neurons_in;
@@ -127,9 +127,12 @@ template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
 }
 
 template <typename T>
-std::vector<Value<T>> Neuron<T>::parameters(){
-    std::vector<Value<T>> params = m_weights;
-    params.push_back(m_bias);
+std::vector<Value<T>*> Neuron<T>::parameters() {
+    std::vector<Value<T>*> params;
+    for (auto& w : m_weights) {
+        params.push_back(&w);
+    }
+    params.push_back(&m_bias);
     return params;
 }
 
@@ -155,16 +158,33 @@ std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> &x) {
     return m_neurons_output;
 }
 
+#define TEST
+#ifdef TEST
 template <typename T>
-std::vector<Value<T>> Layer<T>::parameters() {
-    std::vector<Value<T>> params;
+std::vector<Value<T>*> Layer<T>::parameters() {
+    std::vector<Value<T>*> params;
     for (auto& neuron : m_neurons) {
-        for (const auto& p : neuron.parameters()){
-            params.emplace_back(p);
+        for (auto& p : neuron.parameters()){
+            params.emplace_back(&p);
         }
     }
     return params;
 }
+
+#else
+
+// other possible implementation
+template <typename T>
+std::vector<Value<T>*> Layer<T>::parameters() {
+    std::vector<Value<T>*> params;
+    for (auto& neuron : m_neurons) {
+        auto neuron_params = neuron.parameters();
+        params.insert(params.end(), neuron_params.begin(), neuron_params.end());
+    }
+    return params;
+}
+
+#endif
 
 //  ================ Implementation MLP =================
 
@@ -207,11 +227,11 @@ MLP<T, N>::operator()(std::vector<Value<T>> &x) {
 }
 
 template <typename T, size_t N>
-std::vector<Value<T>> MLP<T,N>::parameters() {
-    std::vector<Value<T>> params;
+std::vector<Value<T>&> MLP<T,N>::parameters() {
+    std::vector<Value<T>*> params;
     for (auto& layer : m_layers) {
-        for (const auto& p : layer.parameters()){
-            params.emplace_back(p);
+        for (auto& p : layer.parameters()){
+            params.emplace_back(&p);
         }
     }
     return params;
