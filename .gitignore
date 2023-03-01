@@ -2,3 +2,4 @@
 output/
 .vscode/
 .ccls-chache
+.DS_Store

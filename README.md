@@ -56,6 +56,8 @@ int main() {
 
 ### TODO
 
+- I Have to zero grad which will also have to zero other things
+
 - I have to fix neural network debugging from single neuron
 
 - += would still be nice
