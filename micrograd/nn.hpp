@@ -20,47 +20,52 @@ template <typename T> T random_uniform(T range_from, T range_to) {
 // THIS IS NOT THE MOST EFFICIENT IMPLEMENTATION BUT SAVES ALL THE INTERMEDIATE
 // STATES TO DRAW THE GRAPH
 
+// I have to propagate the gradient trough the bias
+
 // ---------------------------------------------------------
 
-// Parent class
+// Module Parent class as an interface
 template <typename T>
 class Module{
 public:
     void zero_grad(){
-        for (const auto& p: parameters())
-            p.grad = 0;
+        for (auto& p: parameters()){
+            p.grad = 0.0;
+        }
     }
 
-    std::vector<Value<T>> parameters(){
+    // Make it virtual so that it can be override
+    virtual std::vector<Value<T>> parameters(){
         return {};
     }
 };
 
-template <typename T> class Neuron : Module<T> {
+template <typename T> class Neuron : public Module<T> {
 public:
     Neuron(size_t num_neurons_input);
 
     // Call operator: w * x + b dot product
     Value<T> operator()(std::vector<Value<T>> &x);
     // Overriding
-    std::vector<Value<T>> parameters();
+    virtual std::vector<Value<T>> parameters() override;
 
 public:
     size_t m_num_neurons_input;
     std::vector<Value<T>> m_weights;
+    // I'm not propagating the gradient to the bias
     Value<T> m_bias;
 };
 
 // ---------------------------------------------------------
 
-template <typename T> class Layer : Module<T> {
+template <typename T> class Layer : public Module<T> {
 public:
     Layer(size_t num_neurons_input, size_t num_neurons_out);
 
     // Call operator: w * x + b dot product
     std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
     // Overriding
-    std::vector<Value<T>> parameters();
+    virtual std::vector<Value<T>> parameters() override;
 
 public:
     // Create the neurons for the layer
@@ -69,7 +74,7 @@ public:
 
 // ----------------------------------------------------------
 
-template <typename T, size_t N> class MLP : Module<T> {
+template <typename T, size_t N> class MLP : public Module<T> {
 public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
@@ -80,7 +85,7 @@ public:
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
     // Overriding
-    std::vector<Value<T>> parameters();
+    virtual std::vector<Value<T>> parameters() override;
 
 public:
     const size_t m_num_neurons_in;
@@ -106,18 +111,19 @@ Neuron<T>::Neuron(size_t number_of_neurons_input)
 
 template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
 
-    Value<T> m_weighted_sum = Value<T>(0.0, "Neuron_output");
+    // Save the result on the heap to use it later when I need it
+    Value<T>* m_weighted_sum = new Value<T>(0.0, "Neuron_output");
 
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
-        m_weighted_sum += m_weights[i] * x[i];
+        *m_weighted_sum += m_weights[i] * x[i];
     }
 
     // Add the bias
-    m_weighted_sum += m_bias;
+    *m_weighted_sum += m_bias;
 
     // Return the activation value of the neuron as a value object
-    return (m_weighted_sum.tanh());
+    return m_weighted_sum->tanh();
 }
 
 template <typename T>

@@ -13,30 +13,45 @@ int main() {
     // Three neurons
     auto neuron = Neuron<TYPE>(3);
 
-    std::vector<Value<TYPE>> x = {
+    std::vector<Value<TYPE>> x1 = {
         Value<TYPE>(2.0, "first_value"),
         Value<TYPE>(3.0, "second_value"),
         Value<TYPE>(-1.0, "third_value"),
     };
 
-    std::vector<Value<TYPE>> y = {
+    std::vector<Value<TYPE>> x2 = {
         Value<TYPE>(5.0, "first_value"),
         Value<TYPE>(-2.0, "second_value"),
         Value<TYPE>(10.0, "third_value"),
     };
 
     // Testing the neuron output with two different set of values
-    /* std::cout << neuron(x) << '\n'; */
-    /* // Neuron two should have rest the m_neurons value */
-    /* std::cout << neuron(y) << '\n'; */
+    auto y1 = neuron(x1);
+    y1.backward();
+    neuron.zero_grad();
 
-    neuron(x).backward();
+    auto y2 = neuron(x2);
+    y2.backward();
+    neuron.zero_grad();
+
+    neuron.zero_grad();
+
+    std::cout << "Outputs:" << '\n';
+    std::cout << "-----------------" << '\n';
+
+    std::cout << "First pass: " << y1 << '\n';
+    /* // Neuron two should have rest the m_neurons value */
+    std::cout << "Second pass: " << y2 << "\n";
+
+    std::cout << "Parameters: " << '\n';
+    std::cout << "-----------------" << '\n';
 
     // Getting the neuron parameters
     for (auto& p : neuron.parameters()){
         std::cout<< p << "\n";
     }
 
+    y1.draw_graph();
 }
 
 #elif NETWORK
