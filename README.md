@@ -56,6 +56,8 @@ int main() {
 
 ### TODO
 
+- Create a model class store things on the heap and provide zero grad and rest automatically for the next forward pass
+
 - I Have to zero grad which will also have to zero other things
 
 - I have to fix neural network debugging from single neuron

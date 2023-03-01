@@ -10,7 +10,7 @@ typedef double TYPE;
 
 int main() {
     /// Initialize the neural network
-    auto n = MLP<TYPE, INPUTS>(3, {4, 4, 1});
+    auto model = MLP<TYPE, INPUTS>(3, {4, 4, 1});
 
     std::vector<Value<TYPE>> x = {
         Value<TYPE>(2.0, "first_value"),
@@ -18,11 +18,17 @@ int main() {
         Value<TYPE>(-1.0, "third_value"),
     };
 
-    // auto will be an std::variant
-    auto y = n(x);
+    for (auto& p : model.parameters()){
+        std::cout<< p << "\n";
+    }
 
-    std::get<Value<TYPE>>(y).backward();
-    std::get<Value<TYPE>>(y).draw_graph();
+    std::cout << "Number of parameters: " << model.parameters().size() << "\n";
+
+    // auto will be an std::variant
+    /* auto y = model(x); */
+    /*  */
+    /* std::get<Value<TYPE>>(y).backward(); */
+    /* std::get<Value<TYPE>>(y).draw_graph(); */
 }
 
 #else

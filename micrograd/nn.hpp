@@ -5,6 +5,7 @@
 //  Copyright © 2023 Jacopo Zacchigna. All rights reserved.
 
 #pragma once
+
 #include "engine.hpp"
 #include <random>
 #include <variant>
@@ -21,39 +22,54 @@ template <typename T> T random_uniform(T range_from, T range_to) {
 
 // ---------------------------------------------------------
 
-template <typename T> class Neuron {
+// Parent class
+template <typename T>
+class Module{
+public:
+    void zero_grad(){
+        for (const auto& p: parameters())
+            p.grad = 0;
+    }
+
+    std::vector<Value<T>> parameters(){
+        return {};
+    }
+};
+
+template <typename T> class Neuron : Module<T> {
 public:
     Neuron(size_t num_neurons_input);
 
     // Call operator: w * x + b dot product
     Value<T> operator()(std::vector<Value<T>> &x);
+    // Overriding
+    std::vector<Value<T>> parameters();
 
 public:
     size_t m_num_neurons_input;
     std::vector<Value<T>> m_weights;
-    // Which will be initialize with the bias at the start
-    Value<T> m_weighted_sum;
+    Value<T> m_bias;
 };
 
 // ---------------------------------------------------------
 
-template <typename T> class Layer {
+template <typename T> class Layer : Module<T> {
 public:
     Layer(size_t num_neurons_input, size_t num_neurons_out);
 
     // Call operator: w * x + b dot product
     std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
+    // Overriding
+    std::vector<Value<T>> parameters();
 
 public:
     // Create the neurons for the layer
     std::vector<Neuron<T>> m_neurons;
-    // Create an array of neurons to return
-    std::vector<Value<T>> m_neurons_output;
 };
 
 // ----------------------------------------------------------
 
-template <typename T, size_t N> class MLP {
+template <typename T, size_t N> class MLP : Module<T> {
 public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
@@ -63,6 +79,8 @@ public:
 
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
+    // Overriding
+    std::vector<Value<T>> parameters();
 
 public:
     const size_t m_num_neurons_in;
@@ -71,6 +89,7 @@ public:
 public:
     std::vector<Layer<T>> m_layers;
     // Layer given in output
+    // Has to be reset
     std::vector<std::vector<Value<T>>> m_single_layer_output;
 };
 
@@ -79,7 +98,7 @@ public:
 template <typename T>
 Neuron<T>::Neuron(size_t number_of_neurons_input)
     : m_num_neurons_input(number_of_neurons_input),
-      m_weighted_sum(random_uniform(-1.0, 1.0)) {
+      m_bias(random_uniform(-1.0, 1.0)) {
     for (size_t i = 0; i < m_num_neurons_input; i++) {
         m_weights.emplace_back(Value<T>(random_uniform(-1.0, 1.0), "weight"));
     }
@@ -87,13 +106,25 @@ Neuron<T>::Neuron(size_t number_of_neurons_input)
 
 template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
 
+    Value<T> m_weighted_sum = Value<T>(0.0, "Neuron_output");
+
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
         m_weighted_sum += m_weights[i] * x[i];
     }
 
+    // Add the bias
+    m_weighted_sum += m_bias;
+
     // Return the activation value of the neuron as a value object
     return (m_weighted_sum.tanh());
+}
+
+template <typename T>
+std::vector<Value<T>> Neuron<T>::parameters(){
+    std::vector<Value<T>> params = m_weights;
+    params.push_back(m_bias);
+    return params;
 }
 
 //  ================ Implementation  Layer =================
@@ -108,12 +139,25 @@ Layer<T>::Layer(size_t num_neurons_input, size_t num_neurons_output) {
 
 template <typename T>
 std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> &x) {
+    // Create an array of neurons to return
+    std::vector<Value<T>> m_neurons_output;
 
     // Iterate over the m_neurons
     for (auto &neuron : m_neurons) {
         m_neurons_output.emplace_back(neuron(x));
     }
     return m_neurons_output;
+}
+
+template <typename T>
+std::vector<Value<T>> Layer<T>::parameters() {
+    std::vector<Value<T>> params;
+    for (auto& neuron : m_neurons) {
+        for (const auto& p : neuron.parameters()){
+            params.emplace_back(p);
+        }
+    }
+    return params;
 }
 
 //  ================ Implementation MLP =================
@@ -154,6 +198,17 @@ MLP<T, N>::operator()(std::vector<Value<T>> &x) {
     }
 
     return m_single_layer_output[N];
+}
+
+template <typename T, size_t N>
+std::vector<Value<T>> MLP<T,N>::parameters() {
+    std::vector<Value<T>> params;
+    for (auto& layer : m_layers) {
+        for (const auto& p : layer.parameters()){
+            params.emplace_back(p);
+        }
+    }
+    return params;
 }
 
 // Overloading for the output to standard out ---------------------------
