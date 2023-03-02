@@ -22,6 +22,10 @@ template <typename T> T random_uniform(T range_from, T range_to) {
 
 // I have to propagate the gradient trough the bias
 
+namespace nn {
+
+template <typename T> using Value_Ptr = std::shared_ptr<Value<T>>;
+
 // ---------------------------------------------------------
 
 // Module Parent class as an interface
@@ -77,7 +81,7 @@ public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::shared_ptr<std::vector<std::vector<Value<T>>>> operator()(std::vector<Value<T>> &x);
+    std::vector<Value_Ptr<T>> operator()(std::vector<Value_Ptr<T>> x);
 
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
@@ -108,7 +112,7 @@ Neuron<T>::Neuron(size_t number_of_neurons_input)
 template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
 
     // Save the result on the heap to use it later when I need it
-     auto m_weighted_sum = new Value<T>(0.0, "Neuron_output");
+    auto m_weighted_sum = new Value<T>(0.0, "Neuron_output");
 
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
@@ -189,25 +193,14 @@ MLP<T, N>::MLP(size_t num_neurons_input,
 }
 
 template <typename T, size_t N>
-std::shared_ptr<std::vector<std::vector<Value<T>>>>
-MLP<T, N>::operator()(std::vector<Value<T>> &x) {
+std::vector<Value_Ptr<T>> MLP<T, N>::operator()(std::vector<Value_Ptr<T>> x) {
 
-    // Create a new value of value
-    std::vector<std::vector<Value<T>>> single_layers_output;
-
-    // Set the current layer to the given values
-    single_layers_output.emplace_back(x);
-
-    // Iterate over the layer from the second one to the N + 1 layer
-    for (size_t i = 1; i <= N; i++) {
-        single_layers_output.emplace_back(
-            m_layers[i - 1](single_layers_output[i - 1]));
+    std::vector<Value_Ptr<T>> layer_output = x;
+    for (auto &layer : m_layers) {
+        layer_output = layer(layer_output);
     }
-
-    auto result = std::make_shared<std::vector<std::vector<Value<T>>>>(single_layers_output);
-
     // Return a Value<T> if it is just one and else return the array of values
-    return result;
+    return layer_output;
 }
 
 template <typename T, size_t N>
@@ -233,3 +226,4 @@ std::ostream &operator<<(std::ostream &os, const MLP<T, N> &mlp) {
     os << " ]\n";
     return os;
 }
+} // namespace nn

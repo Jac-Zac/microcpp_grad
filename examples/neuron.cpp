@@ -1,6 +1,10 @@
 #include <micrograd/nn.hpp>
 
+// Using the neural network namespace
+using namespace nn;
+
 int main() {
+
     // Three neurons
     auto neuron = Neuron<double>(3);
 
@@ -17,13 +21,13 @@ int main() {
     };
 
     // Testing the neuron output with two different set of values
-    auto y1 = neuron(x1);
+    Value<double> y1 = neuron(x1);
     y1.backward();
     neuron.zero_grad();
 
-    auto y2 = neuron(x2);
+    Value<double> y2 = neuron(x2);
     y2.backward();
-    neuron.zero_grad();
+    /* neuron.zero_grad(); */
 
     std::cout << "Outputs:" << '\n';
     std::cout << "-----------------" << '\n';
