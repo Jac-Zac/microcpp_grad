@@ -56,6 +56,8 @@ int main() {
 
 ### TODO
 
+- Missing tanh
+
 - Try using shared pointers for neurons and then we will see
 
 - Think of a better way to write the autograd engine. And also stack based topo_sort

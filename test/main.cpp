@@ -4,81 +4,35 @@
 
 typedef double TYPE;
 
-#define LAYER
+#define NET
 
-#ifdef LAYER
-
-int main() {
-    // Three neurons
-    auto layer = Layer<TYPE>(3,3);
-
-    std::vector<Value<TYPE>> x1 = {
-        Value<TYPE>(-5.0, "first_value"),
-        Value<TYPE>(3.0, "second_value"),
-        Value<TYPE>(7.0, "third_value"),
-    };
-
-    std::vector<Value<TYPE>> x2 = {
-        Value<TYPE>(3.0, "first_value"),
-        Value<TYPE>(-3.0, "second_value"),
-        Value<TYPE>(2.0, "third_value"),
-    };
-
-    // Testing the neuron output with two different set of values
-    auto y1 = layer(x1);
-    for (auto& value : y1){
-        value->backward();
-    }
-
-    layer.zero_grad();
-
-    auto y2 = layer(x2);
-    for (auto& value : y2){
-        value->backward();
-    }
-
-    std::cout << "Outputs:" << '\n';
-    std::cout << "-----------------" << '\n';
-
-    std::cout << "First pass: " << *y1[0] << '\n';
-    /* // Neuron two should have rest the m_neurons value */
-    std::cout << "Second pass: " << *y2[1] << "\n";
-
-    std::cout << "Parameters: " << '\n';
-    std::cout << "-----------------" << '\n';
-
-    // Getting the neuron parameters
-    for (auto &p : layer.parameters()) {
-        std::cout << *p << "\n";
-    }
-
-    y2[0]->draw_graph();
-}
-
-#elif NETWORK
+#ifdef NET
 
 int main() {
     /// Initialize the neural network
     auto model = MLP<TYPE, INPUTS>(3, {4, 4, 1});
 
     std::vector<Value<TYPE>> x = {
-        Value<TYPE>(2.0, "first_value"),
-        Value<TYPE>(3.0, "second_value"),
-        Value<TYPE>(-1.0, "third_value"),
+        Value<TYPE>(6.0, "first_value"),
+        Value<TYPE>(-9.0, "second_value"),
+        Value<TYPE>(4.0, "third_value"),
     };
 
     for (auto &p : model.parameters()) {
         std::cout << p << "\n";
     }
 
+    std::cout << "Model information: " << model << "\n";
     std::cout << "Number of parameters: " << model.parameters().size() << "\n";
 
+    std::shared_ptr<std::vector<std::vector<Value<double>>>> y = model(x);
+
     // auto will be an std::variant
-    /* auto y = model(x); */
-    /*  */
-    /* std::get<Value<TYPE>>(y).backward(); */
-    /* std::get<Value<TYPE>>(y).draw_graph(); */
+    y[3][0][0].backward();
+    y[3][0][0].draw_graph();
 }
+
+#elif
 
 int main() {
     // Binary classification

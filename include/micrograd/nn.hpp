@@ -42,7 +42,7 @@ public:
     Neuron(size_t num_neurons_input);
 
     // Call operator: w * x + b dot product
-    std::shared_ptr<Value<T>> operator()(std::vector<Value<T>> &x);
+    Value<T> operator()(std::vector<Value<T>> &x);
     // Overriding
     virtual std::vector<Value<T> *> parameters() override;
 
@@ -60,7 +60,7 @@ public:
     Layer(size_t num_neurons_input, size_t num_neurons_out);
 
     // Call operator: forward for every neuron in the layer
-    std::vector<std::shared_ptr<Value<T>>> operator()(std::vector<Value<T>> &x);
+    std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
 
     // Overriding
     virtual std::vector<Value<T> *> parameters() override;
@@ -77,7 +77,7 @@ public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<std::vector<Value<T>>> *operator()(std::vector<Value<T>> &x);
+    std::shared_ptr<std::vector<std::vector<Value<T>>>> operator()(std::vector<Value<T>> &x);
 
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
@@ -88,7 +88,7 @@ public:
     std::vector<Layer<T>> m_layers;
     size_t m_net_size;
     // Layer given in output
-protected:
+public:
     const size_t m_num_neurons_in;
     // N layers of the N + 1 total have outputs
     const std::array<size_t, N> m_num_neurons_out;
@@ -105,10 +105,10 @@ Neuron<T>::Neuron(size_t number_of_neurons_input)
     }
 }
 
-template <typename T> std::shared_ptr<Value<T>> Neuron<T>::operator()(std::vector<Value<T>> &x) {
+template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
 
     // Save the result on the heap to use it later when I need it
-    auto m_weighted_sum = std::make_unique<Value<T>>(0.0, "Neuron_output");
+     auto m_weighted_sum = new Value<T>(0.0, "Neuron_output");
 
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
@@ -118,11 +118,8 @@ template <typename T> std::shared_ptr<Value<T>> Neuron<T>::operator()(std::vecto
     // Add the bias
     *m_weighted_sum += m_bias;
 
-
-    // Call tanh on the Value<T> object before returning the unique_ptr
-    m_weighted_sum->tanh();
-
-    return m_weighted_sum;
+    // return the activated value
+    return m_weighted_sum->tanh();
 }
 
 template <typename T> std::vector<Value<T> *> Neuron<T>::parameters() {
@@ -149,9 +146,9 @@ Layer<T>::Layer(size_t num_neurons_input, size_t num_neurons_output) {
 }
 
 template <typename T>
-std::vector<std::shared_ptr<Value<T>>> Layer<T>::operator()(std::vector<Value<T>> &x) {
+std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> &x) {
     // Create an array of neurons to return
-    std::vector<std::shared_ptr<Value<T>>> m_neurons_output;
+    std::vector<Value<T>> m_neurons_output;
 
     // Iterate over the m_neurons
     for (auto &neuron : m_neurons) {
@@ -192,24 +189,25 @@ MLP<T, N>::MLP(size_t num_neurons_input,
 }
 
 template <typename T, size_t N>
-std::vector<std::vector<Value<T>>> *
+std::shared_ptr<std::vector<std::vector<Value<T>>>>
 MLP<T, N>::operator()(std::vector<Value<T>> &x) {
 
     // Create a new value of value
-    std::vector<std::vector<Value<T>>> *single_layer_output =
-        new std::vector<std::vector<Value<T>>>;
+    std::vector<std::vector<Value<T>>> single_layers_output;
 
     // Set the current layer to the given values
-    single_layer_output->emplace_back(x);
+    single_layers_output.emplace_back(x);
 
     // Iterate over the layer from the second one to the N + 1 layer
     for (size_t i = 1; i <= N; i++) {
-        single_layer_output->emplace_back(
-            m_layers[i - 1]((*single_layer_output)[i - 1]));
+        single_layers_output.emplace_back(
+            m_layers[i - 1](single_layers_output[i - 1]));
     }
 
+    auto result = std::make_shared<std::vector<std::vector<Value<T>>>>(single_layers_output);
+
     // Return a Value<T> if it is just one and else return the array of values
-    return single_layer_output;
+    return result;
 }
 
 template <typename T, size_t N>
