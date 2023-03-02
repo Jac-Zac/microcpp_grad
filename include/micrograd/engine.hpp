@@ -10,10 +10,10 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <stack>
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <memory>
 
 enum ops_type : char {
     SUM = '+',
@@ -36,7 +36,7 @@ public:
 
 protected:
     char m_op;
-    std::array<Value<T> *, 2> m_prev; // previous values
+    std::array<Value<T>*, 2> m_prev; // previous values
     std::vector<Value<T> *>
         m_sorted_values; // vector to store the sorted values
     std::unordered_set<Value<T> *> m_visited; // keep track of the visited nodes
@@ -75,8 +75,11 @@ public:
     }
 
     friend Value &operator+=(Value &lhs, const Value &rhs) {
-        Value<T> *tmp1 = new Value(lhs.data, "", lhs.m_op, lhs.m_prev);
-        Value<T> *tmp2 = new Value(rhs.data, "", rhs.m_op, rhs.m_prev);
+        /* std::shared_ptr<Value<T>> tmp1 = std::make_shared<Value<T>>(lhs.data, "", lhs.m_op, lhs.m_prev); */
+        /* std::shared_ptr<Value<T>> tmp2 = std::make_shared<Value<T>>(rhs.data, "", rhs.m_op, rhs.m_prev); */
+
+        Value<T>* tmp1 = new Value<T>(lhs.data, "", lhs.m_op, lhs.m_prev);
+        Value<T>* tmp2 = new Value<T>(rhs.data, "", rhs.m_op, rhs.m_prev);
 
         lhs = (*tmp1 + *tmp2);
 

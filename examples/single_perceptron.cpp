@@ -1,4 +1,4 @@
-#include "../micrograd/engine.hpp"
+#include <micrograd/engine.hpp>
 
 int main() {
     // Creating a single perception

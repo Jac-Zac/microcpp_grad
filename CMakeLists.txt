@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-project(micrograd CXX)
+cmake_minimum_required(VERSION 3.15.0)
+project(micrograd)
 
 set(CMAKE_CROSSCOMPILING "True")
 
@@ -13,10 +13,9 @@ file(GLOB_RECURSE SOURCES
       test/**.cpp
       # examples/**.cpp
 )
-file(GLOB_RECURSE HEADERS
-      micrograd/*hpp
-      micrograd/**/*.hpp
-)
+
+add_library(micrograd INTERFACE)
+target_include_directories(micrograd INTERFACE include)
 
 add_executable(test_executable ${SOURCES})
-target_precompile_headers(test_executable PUBLIC ${HEADERS})
+target_link_libraries(test_executable micrograd)

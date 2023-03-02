@@ -1,4 +1,4 @@
-#include "../micrograd/nn.hpp"
+#include <micrograd/nn.hpp>
 
 int main() {
     // Three neurons

@@ -110,6 +110,7 @@ Neuron<T>::Neuron(size_t number_of_neurons_input)
 template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
 
     // Save the result on the heap to use it later when I need it
+    /* Value<T>* m_weighted_sum = new Value<T>(0.0, "Neuron_output"); */
     Value<T>* m_weighted_sum = new Value<T>(0.0, "Neuron_output");
 
     // Sum over all multiplies
