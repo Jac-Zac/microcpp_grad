@@ -25,19 +25,16 @@ template <typename T> T random_uniform(T range_from, T range_to) {
 // ---------------------------------------------------------
 
 // Module Parent class as an interface
-template <typename T>
-class Module{
+template <typename T> class Module {
 public:
-    void zero_grad(){
-        for (auto& p: parameters()){
+    void zero_grad() {
+        for (auto &p : parameters()) {
             p->grad = 0.0;
         }
     }
 
     // Make it virtual so that it can be override
-    virtual std::vector<Value<T>*> parameters(){
-        return {};
-    }
+    virtual std::vector<Value<T> *> parameters() { return {}; }
 };
 
 template <typename T> class Neuron : public Module<T> {
@@ -45,9 +42,9 @@ public:
     Neuron(size_t num_neurons_input);
 
     // Call operator: w * x + b dot product
-    Value<T> operator()(std::vector<Value<T>> &x);
+    std::shared_ptr<Value<T>> operator()(std::vector<Value<T>> &x);
     // Overriding
-    virtual std::vector<Value<T>*> parameters() override;
+    virtual std::vector<Value<T> *> parameters() override;
 
 public:
     size_t m_num_neurons_input;
@@ -62,10 +59,11 @@ template <typename T> class Layer : public Module<T> {
 public:
     Layer(size_t num_neurons_input, size_t num_neurons_out);
 
-    // Call operator: w * x + b dot product
-    std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
+    // Call operator: forward for every neuron in the layer
+    std::vector<std::shared_ptr<Value<T>>> operator()(std::vector<Value<T>> &x);
+
     // Overriding
-    virtual std::vector<Value<T>*> parameters() override;
+    virtual std::vector<Value<T> *> parameters() override;
 
 protected:
     // Create the neurons for the layer
@@ -79,12 +77,12 @@ public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<std::vector<Value<T>>>* operator()(std::vector<Value<T>> &x);
+    std::vector<std::vector<Value<T>>> *operator()(std::vector<Value<T>> &x);
 
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
     // Overriding
-    virtual std::vector<Value<T>*> parameters() override;
+    virtual std::vector<Value<T> *> parameters() override;
 
 public:
     std::vector<Layer<T>> m_layers;
@@ -107,11 +105,10 @@ Neuron<T>::Neuron(size_t number_of_neurons_input)
     }
 }
 
-template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
+template <typename T> std::shared_ptr<Value<T>> Neuron<T>::operator()(std::vector<Value<T>> &x) {
 
     // Save the result on the heap to use it later when I need it
-    /* Value<T>* m_weighted_sum = new Value<T>(0.0, "Neuron_output"); */
-    Value<T>* m_weighted_sum = new Value<T>(0.0, "Neuron_output");
+    auto m_weighted_sum = std::make_unique<Value<T>>(0.0, "Neuron_output");
 
     // Sum over all multiplies
     for (size_t i = 0; i < m_num_neurons_input; i++) {
@@ -121,15 +118,18 @@ template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
     // Add the bias
     *m_weighted_sum += m_bias;
 
-    // Return the activation value of the neuron as a value object
-    return m_weighted_sum->tanh();
+
+    // Call tanh on the Value<T> object before returning the unique_ptr
+    m_weighted_sum->tanh();
+
+    return m_weighted_sum;
 }
 
-template <typename T>
-std::vector<Value<T>*> Neuron<T>::parameters() {
-    // Create a vector for the pointers to the parameters to modici them directly
-    std::vector<Value<T>*> params;
-    for (auto& w : m_weights) {
+template <typename T> std::vector<Value<T> *> Neuron<T>::parameters() {
+    // Create a vector for the pointers to the parameters to modici them
+    // directly
+    std::vector<Value<T> *> params;
+    for (auto &w : m_weights) {
         // Add the weights
         params.push_back(&w);
     }
@@ -149,9 +149,9 @@ Layer<T>::Layer(size_t num_neurons_input, size_t num_neurons_output) {
 }
 
 template <typename T>
-std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> &x) {
+std::vector<std::shared_ptr<Value<T>>> Layer<T>::operator()(std::vector<Value<T>> &x) {
     // Create an array of neurons to return
-    std::vector<Value<T>> m_neurons_output;
+    std::vector<std::shared_ptr<Value<T>>> m_neurons_output;
 
     // Iterate over the m_neurons
     for (auto &neuron : m_neurons) {
@@ -160,15 +160,13 @@ std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> &x) {
     return m_neurons_output;
 }
 
-template <typename T>
-std::vector<Value<T>*> Layer<T>::parameters() {
-    std::vector<Value<T>*> params;
+template <typename T> std::vector<Value<T> *> Layer<T>::parameters() {
+    std::vector<Value<T> *> params;
     // Iterate over all the neurons
-    for (auto& neuron : m_neurons) {
+    for (auto &neuron : m_neurons) {
         auto neuron_params = neuron.parameters();
         // insert an object at the end thus we are not using emplace_back
         params.insert(params.end(), neuron_params.begin(), neuron_params.end());
-
     }
     return params;
 }
@@ -179,25 +177,27 @@ template <typename T, size_t N>
 MLP<T, N>::MLP(size_t num_neurons_input,
                std::array<size_t, N> num_neurons_output)
     : m_num_neurons_in(num_neurons_input),
-      m_num_neurons_out(num_neurons_output)
-{
+      m_num_neurons_out(num_neurons_output) {
 
     // Create the first layer with the input neuron size
     m_layers.emplace_back(Layer<T>(num_neurons_input, num_neurons_output[0]));
 
     // Create the following layers
     for (size_t i = 1; i < N; i++) {
-        // Create layers N layers with the number of neuron from the previous layers and output as the current
+        // Create layers N layers with the number of neuron from the previous
+        // layers and output as the current
         m_layers.emplace_back(
             Layer<T>(num_neurons_output[i - 1], num_neurons_output[i]));
     }
 }
 
 template <typename T, size_t N>
-std::vector<std::vector<Value<T>>>* MLP<T, N>::operator()(std::vector<Value<T>> &x) {
+std::vector<std::vector<Value<T>>> *
+MLP<T, N>::operator()(std::vector<Value<T>> &x) {
 
     // Create a new value of value
-    std::vector<std::vector<Value<T>>>* single_layer_output = new std::vector<std::vector<Value<T>>>;
+    std::vector<std::vector<Value<T>>> *single_layer_output =
+        new std::vector<std::vector<Value<T>>>;
 
     // Set the current layer to the given values
     single_layer_output->emplace_back(x);
@@ -213,14 +213,13 @@ std::vector<std::vector<Value<T>>>* MLP<T, N>::operator()(std::vector<Value<T>> 
 }
 
 template <typename T, size_t N>
-std::vector<Value<T>*> MLP<T,N>::parameters() {
-    std::vector<Value<T>*> params;
+std::vector<Value<T> *> MLP<T, N>::parameters() {
+    std::vector<Value<T> *> params;
     // Iterate over all the layers
-    for (auto& layer : m_layers) {
+    for (auto &layer : m_layers) {
         auto layer_params = layer.parameters();
         // insert an object at the end thus we are not using emplace_back
         params.insert(params.end(), layer_params.begin(), layer_params.end());
-
     }
     return params;
 }

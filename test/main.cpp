@@ -4,50 +4,58 @@
 
 typedef double TYPE;
 
+#define LAYER
+
+#ifdef LAYER
+
 int main() {
     // Three neurons
-    auto model = MLP<TYPE,INPUTS>(3,{4,4,1});
+    auto layer = Layer<TYPE>(3,3);
 
     std::vector<Value<TYPE>> x1 = {
         Value<TYPE>(-5.0, "first_value"),
         Value<TYPE>(3.0, "second_value"),
-        Value<TYPE>(7.0, "first_value"),
+        Value<TYPE>(7.0, "third_value"),
     };
 
     std::vector<Value<TYPE>> x2 = {
-        Value<TYPE>(3.0, "second_value"),
+        Value<TYPE>(3.0, "first_value"),
         Value<TYPE>(-3.0, "second_value"),
-        Value<TYPE>(2.0, "first_value"),
+        Value<TYPE>(2.0, "third_value"),
     };
 
     // Testing the neuron output with two different set of values
-    auto y1 = model(x1);
-    y1[4][0].backward();
-    model.zero_grad();
+    auto y1 = layer(x1);
+    for (auto& value : y1){
+        value->backward();
+    }
 
-    auto y2 = model(x2);
-    y2[4][0].backward();
-    model.zero_grad();
+    layer.zero_grad();
+
+    auto y2 = layer(x2);
+    for (auto& value : y2){
+        value->backward();
+    }
 
     std::cout << "Outputs:" << '\n';
     std::cout << "-----------------" << '\n';
 
-    std::cout << "First pass: " << y1[4][0] << '\n';
+    std::cout << "First pass: " << *y1[0] << '\n';
     /* // Neuron two should have rest the m_neurons value */
-    std::cout << "Second pass: " << y2[4][0] << "\n";
+    std::cout << "Second pass: " << *y2[1] << "\n";
 
     std::cout << "Parameters: " << '\n';
     std::cout << "-----------------" << '\n';
 
     // Getting the neuron parameters
-    for (auto& p : model.parameters()){
-        std::cout<< *p << "\n";
+    for (auto &p : layer.parameters()) {
+        std::cout << *p << "\n";
     }
 
-    y2[4][0].draw_graph();
+    y2[0]->draw_graph();
 }
 
-#ifdef NETWORK
+#elif NETWORK
 
 int main() {
     /// Initialize the neural network
@@ -59,8 +67,8 @@ int main() {
         Value<TYPE>(-1.0, "third_value"),
     };
 
-    for (auto& p : model.parameters()){
-        std::cout<< p << "\n";
+    for (auto &p : model.parameters()) {
+        std::cout << p << "\n";
     }
 
     std::cout << "Number of parameters: " << model.parameters().size() << "\n";
