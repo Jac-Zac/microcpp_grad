@@ -2,7 +2,7 @@
 
 <!-- ![awww](puppy.jpg) -->
 
-A tiny Autograd engine rewritten in c++ from [`micrograd`](https://github.com/karpathy/micrograd). Implements back-prop (reverse-mode autodiff) over a dynamically built DAG and a small neural networks library on top of it with a PyTorch-like API. Both are tiny, with about 300 and 150 lines of code respectively. The DAG only operates over scalar values, so e.g. we chop up each neuron into all of its individual tiny adds and multiplies. However, this is enough to build up entire deep neural nets doing binary classification.
+A tiny Autograd engine rewritten in c++ from [`micrograd`](https://github.com/karpathy/micrograd). Implements back-prop (reverse-mode autodiff) over a dynamically built DAG and a small neural networks library on top of it with a PyTorch-like API. Both are tiny, with about 260 and 230 lines of code respectively. The DAG only operates over scalar values, so e.g. we chop up each neuron into all of its individual tiny adds and multiplies. However, this is enough to build up entire deep neural nets doing binary classification.
 
 ### Installation
 
