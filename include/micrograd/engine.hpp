@@ -80,8 +80,10 @@ public:
         /* std::shared_ptr<Value<T>> tmp2 = std::make_shared<Value<T>>(rhs.data,
          * "", rhs.m_op, rhs.m_prev); */
 
-        Value<T> *tmp1 = new Value<T>(lhs.data, lhs.label , lhs.m_op, lhs.m_prev);
-        Value<T> *tmp2 = new Value<T>(rhs.data, rhs.label , rhs.m_op, rhs.m_prev);
+        Value<T> *tmp1 =
+            new Value<T>(lhs.data, lhs.label, lhs.m_op, lhs.m_prev);
+        Value<T> *tmp2 =
+            new Value<T>(rhs.data, rhs.label, rhs.m_op, rhs.m_prev);
 
         lhs = (*tmp1 + *tmp2);
 

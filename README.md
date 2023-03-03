@@ -56,8 +56,8 @@ int main() {
 
 ### TODO
 
-- Missing tanh
+- [ ] Biases grad are not getting resented
 
-- Try using shared pointers for neurons and then we will see
+- [ ] Try using shared pointers
 
-- Think of a better way to write the autograd engine. And also stack based topo_sort
+- [ ] Think of a better way to write the autograd engine. And also stack based topo_sort

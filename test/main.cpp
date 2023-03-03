@@ -1,81 +1,43 @@
 #include <micrograd/nn.hpp>
 
-#define INPUTS 3
+using namespace nn;
+
+#define SIZE 3
+#define PASS_NUM 2
 
 typedef double TYPE;
-
-#define NET
-
-#ifdef NET
-
-int main() {
-    /// Initialize the neural network
-    auto model = MLP<TYPE, INPUTS>(3, {4, 4, 1});
-
-    std::vector<Value<TYPE>> x = {
-        Value<TYPE>(6.0, "first_value"),
-        Value<TYPE>(-9.0, "second_value"),
-        Value<TYPE>(4.0, "third_value"),
-    };
-
-    for (auto &p : model.parameters()) {
-        std::cout << p << "\n";
-    }
-
-    std::cout << "Model information: " << model << "\n";
-    std::cout << "Number of parameters: " << model.parameters().size() << "\n";
-
-    std::shared_ptr<std::vector<std::vector<Value<double>>>> y = model(x);
-
-    // auto will be an std::variant
-    y[3][0][0].backward();
-    y[3][0][0].draw_graph();
-}
-
-#elif
 
 int main() {
     // Binary classification
 
     // define the neural network
-    auto n = MLP<TYPE, INPUTS>(INPUTS, {4, 4, 1});
+    std::array<size_t, SIZE> n_neurons_for_layer = {4, 4, 1};
+    auto model = MLP<TYPE, SIZE>(3, n_neurons_for_layer);
 
     // std::cout << n; // to output the network shape
 
-    std::vector<std::vector<Value<TYPE>>> xs = {
-        {2.0, 3.0, -1.0}, {3.0, -1.0, 0.5}, {0.5, 1.0, 1.0}, {1.0, 1.0, -1.0}};
+    /* std::vector<Value_Vec<TYPE>> xs = { */
+    /*     {2.0, 3.0, -1.0}, {3.0, -1.0, 0.5}, {0.5, 1.0, 1.0}, {1.0, 1.0,
+     * -1.0}}; */
+    std::vector<Value_Vec<TYPE>> xs = {{2.0, 3.0, -1.0}, {3.0, -1.0, 0.5}};
 
     // desired target
-    std::vector<Value<TYPE>> ys = {1.0, -1.0, -1.0, 1.0};
+    Value_Vec<TYPE> ys = {1.0, -1.0};
 
-    std::vector<Value<TYPE>> ypred;
-
-    // Forward pass
-    // Run the 4 different example through the network
-    for (size_t i = 0; i < 4; i++) {
-        ypred.emplace_back(n(xs[0])[i]);
-    }
-
-    /* for (auto &value : ypred) { */
-    /*     std::cout << value << '\n'; */
-    /* } */
+    std::vector<std::vector<Value_Vec<TYPE>>> ypred;
 
     auto loss = Value<TYPE>(0, "loss");
 
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 0; i < PASS_NUM; i++) {
+        ypred.emplace_back(model(xs[i]));
         // Mean Squared Error
-        loss += (ypred[i] - ys[i]) ^ 2;
+        loss += (ypred[i][SIZE][0] - ys[i]) ^ 2;
+        loss.backward();
+        std::cout << loss << '\n';
+        model.zero_grad();
     }
 
-    std::cout << n.m_layers[0].m_neurons[0].m_weights[0] << '\n';
-
-    loss.backward();
-
-    std::cout << loss << '\n';
-
-    std::cout << n.m_layers[0].m_neurons[0].m_weights[0] << '\n';
+    std::cout << "The network hash: " << model.parameters().size() << " parameters\n";
 
     loss.draw_graph();
 }
-
-#endif

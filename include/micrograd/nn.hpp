@@ -45,7 +45,7 @@ public:
     Neuron(size_t num_neurons_input);
 
     // Call operator: w * x + b dot product
-    Value<T> operator()(Value_Vec<T>& x);
+    Value<T> operator()(Value_Vec<T> &x);
     // Overriding
     virtual std::vector<Value<T> *> parameters() override;
 
@@ -63,7 +63,7 @@ public:
     Layer(size_t num_neurons_input, size_t num_neurons_out);
 
     // Call operator: forward for every neuron in the layer
-    Value_Vec<T> operator()(Value_Vec<T>& x);
+    Value_Vec<T> operator()(Value_Vec<T> &x);
     // Overriding
     virtual std::vector<Value<T> *> parameters() override;
 
@@ -79,7 +79,7 @@ public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<Value_Vec<T>> operator()(Value_Vec<T>& x);
+    std::vector<Value_Vec<T>> operator()(Value_Vec<T> &x);
 
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
@@ -101,7 +101,7 @@ public:
 template <typename T>
 Neuron<T>::Neuron(size_t number_of_neurons_input)
     : m_num_neurons_input(number_of_neurons_input),
-      m_bias(Value<T>(random_uniform(-1.0, 1.0),"bias")) {
+      m_bias(Value<T>(random_uniform(-1.0, 1.0), "bias")) {
     for (size_t i = 0; i < m_num_neurons_input; i++) {
         m_weights.emplace_back(Value<T>(random_uniform(-1.0, 1.0), "weight"));
     }
@@ -191,15 +191,14 @@ MLP<T, N>::MLP(size_t num_neurons_input,
 }
 
 template <typename T, size_t N>
-std::vector<Value_Vec<T>> MLP<T, N>::operator()(Value_Vec<T>& x) {
+std::vector<Value_Vec<T>> MLP<T, N>::operator()(Value_Vec<T> &x) {
 
     std::vector<Value_Vec<T>> layer_output;
 
     layer_output.emplace_back(x);
 
     for (size_t i = 1; i <= N; i++) {
-        layer_output.emplace_back(
-            m_layers[i - 1](layer_output[i - 1]));
+        layer_output.emplace_back(m_layers[i - 1](layer_output[i - 1]));
     }
 
     return layer_output;

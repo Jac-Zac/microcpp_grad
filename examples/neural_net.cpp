@@ -18,9 +18,8 @@ int main() {
     // auto will be an std::variant
     auto y = model(x);
 
-
-    // We access the last of the of the output layers since it is 1 - N_TOTAL which is perfect to access the vector
-    // 0 because we only have 1 neuron
+    // We access the last of the of the output layers since it is 1 - N_TOTAL
+    // which is perfect to access the vector 0 because we only have 1 neuron
     y[N_OUTPUT_LAYERS][0].backward();
     /* model.zero_grad(); */
 
