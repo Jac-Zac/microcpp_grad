@@ -36,7 +36,6 @@ public:
             p->grad = 0.0;
         }
     }
-
     // Make it virtual so that it can be override
     virtual std::vector<Value<T> *> parameters() { return {}; }
 };
@@ -81,7 +80,7 @@ public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<Value_Ptr<T>> operator()(std::vector<Value_Ptr<T>> x);
+    std::vector<std::vector<Value<T>>> operator()(std::vector<Value<T>>& x);
 
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
@@ -193,13 +192,17 @@ MLP<T, N>::MLP(size_t num_neurons_input,
 }
 
 template <typename T, size_t N>
-std::vector<Value_Ptr<T>> MLP<T, N>::operator()(std::vector<Value_Ptr<T>> x) {
+std::vector<std::vector<Value<T>>> MLP<T, N>::operator()(std::vector<Value<T>>& x) {
 
-    std::vector<Value_Ptr<T>> layer_output = x;
-    for (auto &layer : m_layers) {
-        layer_output = layer(layer_output);
+    std::vector<std::vector<Value<T>>> layer_output;
+
+    layer_output.emplace_back(x);
+
+    for (size_t i = 1; i <= N; i++) {
+        layer_output.emplace_back(
+            m_layers[i - 1](layer_output[i - 1]));
     }
-    // Return a Value<T> if it is just one and else return the array of values
+
     return layer_output;
 }
 
