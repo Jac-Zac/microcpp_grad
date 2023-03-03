@@ -37,22 +37,24 @@ int main() {
         ypred.clear();
 
         for (size_t i = 0; i < PASS_NUM; i++) {
+            // Forward pass
             ypred.emplace_back(model(xs[i]));
-            // Mean Squared Error
-            loss += ((ypred[i][SIZE][0] - ys[i]) ^ 2);
-            loss.backward();
 
-            // Update parameters thanks to the gradient
-            for (auto &p : model.parameters()) {
-                // Update parameter value
-                p->data += -step_size * (p->grad);
-            }
+            // Mean Squared Error
+            loss += (ypred[i][SIZE][0] - ys[i]) ^ 2;
+            // backward pass
+            loss.backward();
         }
 
-        model.zero_grad();
+        // Update parameters thanks to the gradient
+        for (auto &p : model.parameters()) {
+            // Update parameter value
+            p->data += -step_size * (p->grad);
+        }
+
         std::cout << "The loss at step: " << x << " is: " << loss.data << '\n';
 
-        step_size += 0.01;
+        // Zero grad
+        model.zero_grad();
     }
-    // loss.draw_graph();
 }
