@@ -56,8 +56,6 @@ int main() {
 
 ### TODO
 
-- [ ] Biases grad are not getting resented
-
 - [ ] Try using shared pointers
 
 - [ ] Think of a better way to write the autograd engine. And also stack based topo_sort

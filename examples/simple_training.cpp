@@ -22,16 +22,16 @@ int main() {
 
     std::cout << model; // to output the network shape
 
-    std::cout << "The network hash: " << model.parameters().size()
+    std::cout << "\nThe network has: " << model.parameters().size()
               << " parameters\n\n";
 
     std::vector<std::vector<Value_Vec<TYPE>>> ypred;
-    const double step_size = 0.001;
+    double step_size = 0.01;
 
     std::cout << "Starting Training\n";
     std::cout << "----------------------------\n\n";
 
-    for(size_t x = 0; x < 1000 ; x++){
+    for (size_t x = 1; x <= 100; x++) {
         // Reset in case it is not the first loop
         auto loss = Value<TYPE>(0, "loss");
         ypred.clear();
@@ -41,15 +41,18 @@ int main() {
             // Mean Squared Error
             loss += ((ypred[i][SIZE][0] - ys[i]) ^ 2);
             loss.backward();
-            // The gradient is in the direction of increased loss
-            for (auto &p : model.parameters()) {
-                // Thus we have to decrease the value
-                p->data += -(step_size * p->grad);
-            }
-            model.zero_grad();
-        }
-        std::cout << "The loss at step: " << x << " is: "<< loss.data << '\n';
-    }
 
+            // Update parameters thanks to the gradient
+            for (auto &p : model.parameters()) {
+                // Update parameter value
+                p->data += -step_size * (p->grad);
+            }
+        }
+
+        model.zero_grad();
+        std::cout << "The loss at step: " << x << " is: " << loss.data << '\n';
+
+        step_size += 0.01;
+    }
     // loss.draw_graph();
 }
