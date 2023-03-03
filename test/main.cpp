@@ -26,12 +26,12 @@ int main() {
               << " parameters\n\n";
 
     std::vector<std::vector<Value_Vec<TYPE>>> ypred;
-    const double step_size = 0.01;
+    const double step_size = 0.001;
 
     std::cout << "Starting Training\n";
     std::cout << "----------------------------\n\n";
 
-    for(size_t x = 0; x < 50 ; x++){
+    for(size_t x = 0; x < 1000 ; x++){
         // Reset in case it is not the first loop
         auto loss = Value<TYPE>(0, "loss");
         ypred.clear();
@@ -40,20 +40,15 @@ int main() {
             ypred.emplace_back(model(xs[i]));
             // Mean Squared Error
             loss += ((ypred[i][SIZE][0] - ys[i]) ^ 2);
+            loss.backward();
+            // The gradient is in the direction of increased loss
+            for (auto &p : model.parameters()) {
+                // Thus we have to decrease the value
+                p->data += -(step_size * p->grad);
+            }
+            model.zero_grad();
         }
-
-        loss.backward();
-
-        // The gradient is in the direction of increased loss
-        for (auto &p : model.parameters()) {
-            // Thus we have to decrease the value
-            /* std::cout << "data before update: " << p->data <<'\n'; */
-            p->data += -(step_size * p->grad);
-            /* std::cout << "data after update: " << p->data <<'\n'; */
-        }
-
         std::cout << "The loss at step: " << x << " is: "<< loss.data << '\n';
-        model.zero_grad();
     }
 
     // loss.draw_graph();
