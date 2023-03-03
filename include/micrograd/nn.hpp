@@ -24,7 +24,7 @@ template <typename T> T random_uniform(T range_from, T range_to) {
 
 namespace nn {
 
-template <typename T> using Value_Ptr = std::shared_ptr<Value<T>>;
+template <typename T> using Value_Vec = std::vector<Value<T>>;
 
 // ---------------------------------------------------------
 
@@ -45,7 +45,7 @@ public:
     Neuron(size_t num_neurons_input);
 
     // Call operator: w * x + b dot product
-    Value<T> operator()(std::vector<Value<T>> &x);
+    Value<T> operator()(Value_Vec<T>& x);
     // Overriding
     virtual std::vector<Value<T> *> parameters() override;
 
@@ -63,8 +63,7 @@ public:
     Layer(size_t num_neurons_input, size_t num_neurons_out);
 
     // Call operator: forward for every neuron in the layer
-    std::vector<Value<T>> operator()(std::vector<Value<T>> &x);
-
+    Value_Vec<T> operator()(Value_Vec<T>& x);
     // Overriding
     virtual std::vector<Value<T> *> parameters() override;
 
@@ -80,7 +79,7 @@ public:
     MLP(size_t num_neurons_input, std::array<size_t, N> num_neurons_out);
 
     // Call operator: w * x + b dot product
-    std::vector<std::vector<Value<T>>> operator()(std::vector<Value<T>>& x);
+    std::vector<Value_Vec<T>> operator()(Value_Vec<T>& x);
 
     // << operator overload to get the structure of the network
     std::ostream &operator<<(std::ostream &os);
@@ -102,13 +101,13 @@ public:
 template <typename T>
 Neuron<T>::Neuron(size_t number_of_neurons_input)
     : m_num_neurons_input(number_of_neurons_input),
-      m_bias(random_uniform(-1.0, 1.0)) {
+      m_bias(Value<T>(random_uniform(-1.0, 1.0),"bias")) {
     for (size_t i = 0; i < m_num_neurons_input; i++) {
         m_weights.emplace_back(Value<T>(random_uniform(-1.0, 1.0), "weight"));
     }
 }
 
-template <typename T> Value<T> Neuron<T>::operator()(std::vector<Value<T>> &x) {
+template <typename T> Value<T> Neuron<T>::operator()(Value_Vec<T> &x) {
 
     // Save the result on the heap to use it later when I need it
     auto m_weighted_sum = new Value<T>(0.0, "Neuron_output");
@@ -149,9 +148,9 @@ Layer<T>::Layer(size_t num_neurons_input, size_t num_neurons_output) {
 }
 
 template <typename T>
-std::vector<Value<T>> Layer<T>::operator()(std::vector<Value<T>> &x) {
+std::vector<Value<T>> Layer<T>::operator()(Value_Vec<T> &x) {
     // Create an array of neurons to return
-    std::vector<Value<T>> m_neurons_output;
+    Value_Vec<T> m_neurons_output;
 
     // Iterate over the m_neurons
     for (auto &neuron : m_neurons) {
@@ -192,9 +191,9 @@ MLP<T, N>::MLP(size_t num_neurons_input,
 }
 
 template <typename T, size_t N>
-std::vector<std::vector<Value<T>>> MLP<T, N>::operator()(std::vector<Value<T>>& x) {
+std::vector<Value_Vec<T>> MLP<T, N>::operator()(Value_Vec<T>& x) {
 
-    std::vector<std::vector<Value<T>>> layer_output;
+    std::vector<Value_Vec<T>> layer_output;
 
     layer_output.emplace_back(x);
 

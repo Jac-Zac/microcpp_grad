@@ -2,44 +2,27 @@
 
 using namespace nn;
 
-/* #define TEST */
-#ifdef TEST
+#define N_OUTPUT_LAYERS 3
 
 int main() {
     /// Initialize the neural network
-    auto n = MLP<double, 3> (3, {4,4,1});
+
+    std::array<size_t, N_OUTPUT_LAYERS> output_layers_sizes = {4, 4, 1};
+    auto model = MLP<double, N_OUTPUT_LAYERS>(2, output_layers_sizes);
 
     std::vector<Value<double>> x = {
         Value<double>(2.0, "first_value"),
         Value<double>(3.0, "second_value"),
-        Value<double>(-1.0, "third_value"),
-    };
-
-    // auto will be an std::variant
-    auto y = n(x);
-
-    y[3][0].backward();
-    y[3][0].draw_graph();
-}
-
-#else
-
-int main() {
-    /// Initialize the neural network
-    auto model = MLP<double, 3>(3, {4, 4, 1});
-
-    std::vector<Value<double>> x = {
-        Value<double>(2.0, "first_value"),
-        Value<double>(3.0, "second_value"),
-        Value<double>(-1.0, "third_value"),
     };
 
     // auto will be an std::variant
     auto y = model(x);
 
+
+    // We access the last of the of the output layers since it is 1 - N_TOTAL which is perfect to access the vector
     // 0 because we only have 1 neuron
-    y[3][0].backward();
-    model.zero_grad();
+    y[N_OUTPUT_LAYERS][0].backward();
+    /* model.zero_grad(); */
 
     for (auto &p : model.parameters()) {
         std::cout << *p << "\n";
@@ -48,11 +31,9 @@ int main() {
     std::cout << "Model information: " << model << "\n";
     std::cout << "Number of parameters: " << model.parameters().size() << "\n";
 
-    std::cout << "Output: " << y[3][0] << "\n";
+    std::cout << "Output: " << y[N_OUTPUT_LAYERS][0] << "\n";
 
-    y[3][0].draw_graph();
+    y[N_OUTPUT_LAYERS][0].draw_graph();
 
     return 0;
 }
-
-#endif
