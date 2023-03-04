@@ -31,7 +31,7 @@ int main() {
     std::cout << "Starting Training\n";
     std::cout << "----------------------------\n\n";
 
-    for (size_t x = 1; x <= 100; x++) {
+    for (size_t x = 1; x <= 1; x++) {
         // Reset in case it is not the first loop
         auto loss = Value<TYPE>(0, "loss");
         ypred.clear();
@@ -40,11 +40,15 @@ int main() {
             // Forward pass
             ypred.emplace_back(model(xs[i]));
 
+            std:: cout << (ypred[i][SIZE][0] - ys[i]) << '\n';
+
             // Mean Squared Error
             loss += (ypred[i][SIZE][0] - ys[i]) ^ 2;
             // backward pass
             loss.backward();
         }
+
+        loss.draw_graph();
 
         // Update parameters thanks to the gradient
         for (auto &p : model.parameters()) {
