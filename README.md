@@ -57,6 +57,8 @@ int main() {
 
 ### TODO
 
+- [ ] Still need work for the +=
+
 - [ ] Try using shared pointers
 
 - [ ] Think of a better way to write the autograd engine. And also stack based topo_sort
