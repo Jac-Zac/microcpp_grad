@@ -38,7 +38,6 @@ int main() {
         auto loss = Value<TYPE>(0, "loss");
         // Create a tmp variable that allows the full graph to be stored
         // Problem is with the ^ operator
-        auto tmp = Value<TYPE>(0, "tmp");
 
         // Zero grad
         model.zero_grad();
@@ -49,12 +48,10 @@ int main() {
             // Forward pass
             ypred.emplace_back(model(xs[i]));
 
-            Value<TYPE >tmp = (ypred[i][SIZE][0] - ys[i])^2;
-            tmp.label = "tmp";
-
             // Mean Squared Error
-            loss += tmp;
-
+            loss += (ypred[i][SIZE][0] - ys[i]);
+            // This loss is not working also with other operation but the other is
+            /* loss += (ypred[i][SIZE][0] - ys[i])^2; */
         }
 
         // backward pass
