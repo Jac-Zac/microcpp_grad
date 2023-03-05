@@ -31,24 +31,34 @@ int main() {
     std::cout << "Starting Training\n";
     std::cout << "----------------------------\n\n";
 
-    for (size_t x = 1; x <= 1; x++) {
+    for (size_t x = 1; x <= 100; x++) {
         // Reset in case it is not the first loop
-        auto loss = Value<TYPE>(0, "loss");
         ypred.clear();
 
+        auto loss = Value<TYPE>(0, "loss");
+        // Create a tmp variable that allows the full graph to be stored
+        // Problem is with the ^ operator
+        auto tmp = Value<TYPE>(0, "tmp");
+
+        // Zero grad
+        model.zero_grad();
+
         for (size_t i = 0; i < PASS_NUM; i++) {
+            /* tmp = 0; */
+
             // Forward pass
             ypred.emplace_back(model(xs[i]));
 
-            std::cout << (ypred[i][SIZE][0] - ys[i]) << '\n';
+            Value<TYPE >tmp = (ypred[i][SIZE][0] - ys[i])^2;
+            tmp.label = "tmp";
 
             // Mean Squared Error
-            loss += (ypred[i][SIZE][0] - ys[i]) ^ 2;
-            // backward pass
-            loss.backward();
+            loss += tmp;
+
         }
 
-        loss.draw_graph();
+        // backward pass
+        loss.backward();
 
         // Update parameters thanks to the gradient
         for (auto &p : model.parameters()) {
@@ -58,7 +68,8 @@ int main() {
 
         std::cout << "The loss at step: " << x << " is: " << loss.data << '\n';
 
-        // Zero grad
-        model.zero_grad();
+        if (x == 100){
+            loss.draw_graph();
+        }
     }
 }

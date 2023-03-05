@@ -71,7 +71,7 @@ public:
     }
 
     friend Value operator^(const Value &lhs, const Value &rhs) {
-        return Value(pow(lhs.data, rhs.data), "", POW,
+        return Value(std::pow(lhs.data, rhs.data), "", POW,
                      {const_cast<Value *>(&lhs), const_cast<Value *>(&rhs)});
     }
 

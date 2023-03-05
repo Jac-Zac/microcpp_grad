@@ -57,7 +57,7 @@ int main() {
 
 ### TODO
 
-- [ ] Still need work for the +=
+- [ ] The problem is in the ^ operator
 
 - [ ] Try using shared pointers
 
