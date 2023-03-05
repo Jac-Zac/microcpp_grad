@@ -1,37 +1,32 @@
 #include <micrograd/engine.hpp>
 
-Value<double> compute(Value<double>& d, Value<double>& tmp3){
-    Value<double>* copy = new Value<double>(d.data, "copy of d", d.m_op , d.m_prev);
-    d = *copy + tmp3;
-    return d;
+Value<double> compute(Value<double>& d,const Value<double>& tmp3){
+    Value<double>* copy = new Value<double>(d.data, "copy of forward", d.m_op , d.m_prev);
+    Value<double>* tmp3_copy = new Value<double>(tmp3.data, "copy of tmp", tmp3.m_op , tmp3.m_prev);
+
+    return (*copy + *tmp3_copy);
 }
 
 int main() {
     // Testing
-    auto a = Value<double>(-4.0, "a");
-    auto b = Value<double>(2.0, "b");
-    /* auto c = a * 2; */
-    /* c.label = "c"; */
-    auto d = Value<double>(0);
-    d.label = "d";
+    std::vector<Value<double>> a = {
+        Value<double>(-1.0, "a_1"),
+        Value<double>(+2.0, "a_2"),
+        Value<double>(-3.0, "a_3"),
+        Value<double>(+4.0, "a_4")
+    };
 
-    auto tmp1 = a;
-    tmp1.label = "tmp 1 = a";
-    auto tmp2 = b;
-    tmp2.label = "tmp 2 = b";
+    auto d = Value<double>(5, "d");
+    auto bias = Value<double>(10, "bias");
 
-    /* auto tmp3 = c; */
-    /* tmp2.label = "tmp 3 = c"; */
-    {
+    auto forward = Value<double>(0, "forward");
 
-        auto tmp3  = (tmp2 * tmp1)^2;
-        tmp3.label = "tmp3 computed";
-        d = compute(d, tmp3);
+    for(size_t i = 0 ; i < 4; i++){
+        forward = compute(forward,(a[i] * d));
     }
 
-    /* d += (b - a) ^ 2; */
+    forward += bias;
 
-    /* d += (c - a) ^ 2; */
-    d.backward();
-    d.draw_graph();
+    forward.backward();
+    forward.draw_graph();
 }
