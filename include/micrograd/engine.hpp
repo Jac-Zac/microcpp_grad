@@ -34,7 +34,8 @@ public:
     T data;            // data of the value
     T grad;            // gradient which by default is zero
 
-protected:
+/* protected: */
+public:
     char m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
     std::vector<Value<T> *>
@@ -85,8 +86,8 @@ public:
         /* Value<T> *tmp2 = */
         /*     new Value<T>(rhs.data, rhs.label, rhs.m_op, rhs.m_prev); */
 
-        Value<T> *tmp1 = new Value<T>(lhs.data, "test1", lhs.m_op, lhs.m_prev);
-        Value<T> *tmp2 = new Value<T>(rhs.data, "test2", rhs.m_op, rhs.m_prev);
+        Value<T> *tmp1 = new Value<T>(lhs.data, "copy", lhs.m_op, lhs.m_prev);
+        Value<T> *tmp2 = new Value<T>(rhs.data, "second operando", rhs.m_op, rhs.m_prev);
 
         lhs = (*tmp1 + *tmp2);
 
