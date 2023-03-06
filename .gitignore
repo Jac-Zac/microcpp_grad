@@ -3,3 +3,4 @@ output/
 .vscode/
 .ccls-chache
 .DS_Store
+python/pymicrograd.cpython-311-darwin.so

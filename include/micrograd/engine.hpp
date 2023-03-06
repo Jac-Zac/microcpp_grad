@@ -33,9 +33,8 @@ public:
     std::string label; // label of the value
     T data;            // data of the value
     T grad;            // gradient which by default is zero
-
     /* protected: */
-public:
+private:
     char m_op;
     std::array<Value<T> *, 2> m_prev; // previous values
     std::vector<Value<T> *>

@@ -11,7 +11,17 @@ A tiny Autograd engine rewritten in c++ from [`micrograd`](https://github.com/ka
 cmake -Boutput && cd output && make && ./test_executable
 ```
 
-### Single perception example;
+### New alternative
+
+Run the setup install inside the pybind directory and then:
+
+```
+cmake -Boutput && cd output && make
+```
+
+After that you can use the new library inside the python directory
+
+### Single perception example
 > Example of a perception to show different ops
 ```cpp
 #include "../micrograd/engine.hpp"
@@ -62,3 +72,6 @@ int main() {
 - [ ] Think of a better way to write the autograd engine. And also stack based topo_sort
 
 - Think about mini batches because when you mini batch you compute less accurate gradients for loss minimization but you can do it way faster and thus do way more step
+
+
+- Using pybind

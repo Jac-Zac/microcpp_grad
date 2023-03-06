@@ -3,7 +3,7 @@
 using namespace nn;
 
 #define SIZE 3
-#define BATCH 2
+#define BATCH 4
 #define DATASET_SIZE 4
 
 typedef double TYPE;
@@ -65,9 +65,9 @@ int main() {
 
         // Change the learning rate
         if (j < 200) {
-            lr = 1;
+            lr = 0.5;
         } else {
-            lr = 0.1;
+            lr = 0.05;
         }
 
         // Update parameters thanks to the gradient
