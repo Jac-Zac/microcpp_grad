@@ -26,6 +26,8 @@ int main() {
               << " parameters\n\n";
 
     std::vector<std::vector<Value_Vec<TYPE>>> ypred;
+    Value_Vec<TYPE> tmp_loss;
+
     double step_size = 0.01;
 
     std::cout << "Starting Training\n";
@@ -34,6 +36,7 @@ int main() {
     for (size_t x = 1; x <= 100; x++) {
         // Reset in case it is not the first loop
         ypred.clear();
+        tmp_loss.clear();
 
         auto loss = Value<TYPE>(0, "loss");
         // Create a tmp variable that allows the full graph to be stored
@@ -43,15 +46,17 @@ int main() {
         model.zero_grad();
 
         for (size_t i = 0; i < PASS_NUM; i++) {
-            /* tmp = 0; */
-
             // Forward pass
             ypred.emplace_back(model(xs[i]));
 
             // Mean Squared Error
-            loss += (ypred[i][SIZE][0] - ys[i]);
+            tmp_loss.emplace_back(ypred[i][SIZE][0] - ys[i]);
             // This loss is not working also with other operation but the other is
             /* loss += (ypred[i][SIZE][0] - ys[i])^2; */
+        }
+
+        for(size_t i = 0; i < PASS_NUM; i++){
+            loss += tmp_loss[i]^2;
         }
 
         // backward pass

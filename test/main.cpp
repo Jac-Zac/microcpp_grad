@@ -31,17 +31,9 @@ int main() {
 
     auto forward = Value<double>(0, "forward");
 
-    auto forward_copy = forward;
-
-    forward = forward_copy +y[0];
-
-    auto new_forward_copy = forward;
-
-    forward = new_forward_copy + y[1];
-
-    /* for(size_t i = 0 ; i < 2;  i++){ */
-        /* forward += (c[i] * d); */
-    /* } */
+    for(size_t i = 0 ; i < 2;  i++){
+        forward += y[i];
+    }
 
     forward.backward();
     forward.draw_graph();
