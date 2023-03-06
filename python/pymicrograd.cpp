@@ -16,7 +16,7 @@ PYBIND11_MODULE(pymicrograd, handle) {
       .def(py::init<double,std::string>())
       /* .def_property("data", Value<double>::data) */
       /* .def_property("grad", Value<double>::grad) */
-      .def("label", [](Value<double>& val) { val.label; })
+      /* .def_property("label", this->label;) */
       .def("backward", [](Value<double>& val) { val.backward(); })
       .def("draw_graph", [](Value<double>& val) { val.draw_graph(); })
       .def("tanh", [](Value<double>& val) { return val.tanh(); })
@@ -35,32 +35,28 @@ PYBIND11_MODULE(pymicrograd, handle) {
         return ss.str();
       });
 
-  /*
-  py::class_<Module>(m, "Module")
+  py::class_<Module<double>>(handle, "Module")
     .def(py::init<>())
-    .def("zero_grad", &Module::zero_grad)
-    .def("parameters", &Module::parameters);
+    .def("zero_grad", &Module<double>::zero_grad)
+    .def("parameters", &Module<double>::parameters);
 
-  py::class_<Neuron, Module>(m, "Neuron")
+  py::class_<Neuron<double>, Module<double>>(handle, "Neuron")
     .def(py::init<size_t>())
-    .def("__call__", &Neuron::operator())
-    .def_property_readonly("parameters", &Neuron::parameters)
-    .def("__repr__", [](const Neuron& neuron);
+    .def("__call__", &Neuron<double>::operator())
+    .def_property_readonly("parameters", &Neuron<double>::parameters);
 
-  py::class_<Layer, Module>(m, "Layer")
+  py::class_<Layer<double>, Module<double>>(handle, "Layer")
     .def(py::init<size_t, size_t>())
-    .def("__call__", &Layer::operator())
-    .def_property_readonly("parameters", &Layer::parameters)
-    .def("__repr__", [](const Layer& layer);
+    .def("__call__", &Layer<double>::operator())
+    .def_property_readonly("parameters", &Layer<double>::parameters);
 
-  py::class_<MLP, Module>(m, "MLP")
-    .def(py::init<size_t, std::vector<size_t>>())
-    .def("__call__", &MLP::operator())
-    .def("parameters", &MLP::parameters)
-    .def("__repr__", [](const MLP& mlp) {
+  py::class_<MLP<double,3>, Module<double>>(handle, "MLP")
+    .def(py::init<size_t, std::array<size_t,3>>())
+    .def("__call__", &MLP<double,3>::operator())
+    .def("parameters", &MLP<double,3>::parameters)
+    .def("__repr__", [](const MLP<double,3>& mlp) {
         std::stringstream ss;
         ss << mlp;
         return ss.str();
     });
-    */
 }
