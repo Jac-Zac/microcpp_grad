@@ -7,48 +7,41 @@ Value<double> compute(Value<double>& d,const Value<double>& tmp3){
     return (*copy + *tmp3_copy);
 }
 
-std::vector<Value<double>*> start(){
-        // Testing
-    std::vector<Value<double>*> a = {
-        new Value<double>(-1.0, "a_1"),
-        new Value<double>(+2.0, "a_2"),
-        new Value<double>(-3.0, "a_3"),
-        new Value<double>(+4.0, "a_4"),
-    };
-
-    std::vector<Value<double>*> b = {
-        new Value<double>(-1.0, "b_1"),
-        new Value<double>(+2.0, "b_2"),
-        new Value<double>(-3.0, "b_3"),
-        new Value<double>(+4.0, "b_4"),
-    };
-
-    std::vector<Value<double>*> c;
-
-    for(int i = 0 ; i < 4; i++){
-        Value<double>* tmp = new Value<double>(-1.0, "tmp");
-        *tmp = (*a[i] * *b[i]) + 5;
-        tmp->label = "c";
-        c.emplace_back(tmp);
-    }
-    return c;
-}
-
 int main() {
+    std::vector<Value<double>> a = {
+        Value<double>(5.0, "a_1"),
+        Value<double>(10.0, "a_2"),
+    };
 
-    auto d = Value<double>(5, "d");
-    auto bias = Value<double>(10, "bias");
+    std::vector<Value<double>> b = {
+        Value<double>(-2.0, "b_1"),
+        Value<double>(-4.0, "b_2"),
+    };
+
+    std::vector<Value<double>> c;
+    std::vector<Value<double>> y;
+
+    for(int i = 0 ; i < 2; i++){
+        c.emplace_back((a[i] * b[i]));
+    }
+
+    for(int i = 0 ; i < 2; i++){
+        y.emplace_back(c[i]^2);
+    }
 
     auto forward = Value<double>(0, "forward");
 
-    std::vector<Value<double>*> c = std::move(start());
+    auto forward_copy = forward;
 
-    for(size_t i = 0 ; i < 4;  i++){
-        forward = compute(forward,(*c[i] * d));
-        /* forward += *c[i] * d; */
-    }
+    forward = forward_copy +y[0];
 
-    forward += bias;
+    auto new_forward_copy = forward;
+
+    forward = new_forward_copy + y[1];
+
+    /* for(size_t i = 0 ; i < 2;  i++){ */
+        /* forward += (c[i] * d); */
+    /* } */
 
     forward.backward();
     forward.draw_graph();
