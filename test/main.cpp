@@ -18,15 +18,18 @@ int main() {
         Value<double>(-4.0, "b_2"),
     };
 
+    auto d = Value<double>(-3.0, "d");
+
     std::vector<Value<double>> c;
     std::vector<Value<double>> y;
 
     for(int i = 0 ; i < 2; i++){
-        c.emplace_back((a[i] * b[i]));
+        Value<double> tmp_loss = a[i] * b[i];
+        c.emplace_back(tmp_loss);
     }
 
     for(int i = 0 ; i < 2; i++){
-        y.emplace_back(c[i]^2);
+        y.emplace_back(c[i]^2 + d);
     }
 
     auto forward = Value<double>(0, "forward");

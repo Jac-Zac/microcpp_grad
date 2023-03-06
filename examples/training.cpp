@@ -3,7 +3,8 @@
 using namespace nn;
 
 #define SIZE 3
-#define PASS_NUM 4
+#define BATCH 2
+#define DATASET_SIZE 4
 
 typedef double TYPE;
 
@@ -28,12 +29,12 @@ int main() {
     std::vector<std::vector<Value_Vec<TYPE>>> ypred;
     Value_Vec<TYPE> tmp_loss;
 
-    double step_size = 0.01;
+    double lr = 0.5;
 
     std::cout << "Starting Training\n";
     std::cout << "----------------------------\n\n";
 
-    for (size_t x = 1; x <= 100; x++) {
+    for (size_t j = 1; j <= 500; j++) {
         // Reset in case it is not the first loop
         ypred.clear();
         tmp_loss.clear();
@@ -45,32 +46,38 @@ int main() {
         // Zero grad
         model.zero_grad();
 
-        for (size_t i = 0; i < PASS_NUM; i++) {
-            // Forward pass
+        for (size_t i = 0; i < BATCH; i++) {
+            // Forward pass - target
             ypred.emplace_back(model(xs[i]));
 
-            // Mean Squared Error
+            // Mean Squared Error tmp
             tmp_loss.emplace_back(ypred[i][SIZE][0] - ys[i]);
-            // This loss is not working also with other operation but the other is
-            /* loss += (ypred[i][SIZE][0] - ys[i])^2; */
         }
 
-        for(size_t i = 0; i < PASS_NUM; i++){
+        // I have to compute this outside to allow the gradient to propagate correctly
+        for(size_t i = 0; i < BATCH; i++){
             loss += tmp_loss[i]^2;
         }
 
         // backward pass
         loss.backward();
 
+        // Change the learning rate
+        if(j < 200){
+            lr  = 1;
+        }else{
+            lr  = 0.1;
+        }
+
         // Update parameters thanks to the gradient
         for (auto &p : model.parameters()) {
             // Update parameter value
-            p->data += -step_size * (p->grad);
+            p->data += -lr * (p->grad);
         }
 
-        std::cout << "The loss at step: " << x << " is: " << loss.data << '\n';
+        std::cout << "The loss at step: " << j << " is: " << loss.data << '\n';
 
-        if (x == 100){
+        if (j == 500){
             loss.draw_graph();
         }
     }
