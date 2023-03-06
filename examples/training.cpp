@@ -54,19 +54,20 @@ int main() {
             tmp_loss.emplace_back(ypred[i][SIZE][0] - ys[i]);
         }
 
-        // I have to compute this outside to allow the gradient to propagate correctly
-        for(size_t i = 0; i < BATCH; i++){
-            loss += tmp_loss[i]^2;
+        // I have to compute this outside to allow the gradient to propagate
+        // correctly
+        for (size_t i = 0; i < BATCH; i++) {
+            loss += tmp_loss[i] ^ 2;
         }
 
         // backward pass
         loss.backward();
 
         // Change the learning rate
-        if(j < 200){
-            lr  = 1;
-        }else{
-            lr  = 0.1;
+        if (j < 200) {
+            lr = 1;
+        } else {
+            lr = 0.1;
         }
 
         // Update parameters thanks to the gradient
@@ -77,7 +78,7 @@ int main() {
 
         std::cout << "The loss at step: " << j << " is: " << loss.data << '\n';
 
-        if (j == 500){
+        if (j == 500) {
             loss.draw_graph();
         }
     }

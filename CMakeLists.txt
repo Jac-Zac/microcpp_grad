@@ -10,7 +10,6 @@ set(CMAKE_CXX_FLAGS "-O0")
 file(GLOB_RECURSE SOURCES
       micrograd/*.cpp
       micrograd/**/*.cpp
-      # test/**.cpp
       examples/training.cpp
 )
 
