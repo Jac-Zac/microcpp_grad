@@ -64,7 +64,7 @@ int main() {
         loss.backward();
 
         // Change the learning rate
-        if (j < 200) {
+        if (j < 100) {
             lr = 0.5;
         } else {
             lr = 0.1;
